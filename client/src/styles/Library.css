@@ -1,0 +1,380 @@
+/* Library View Styling */
+
+.library-page-view {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 1rem 0;
+  color: #ffffff;
+}
+
+.library-layout-grid {
+  display: grid;
+  grid-template-columns: 1.8fr 1fr;
+  gap: 1.8rem;
+  align-items: start;
+}
+
+.library-main-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1.8rem;
+  text-align: left;
+}
+
+.library-main-column h2 {
+  font-size: 2.2rem;
+  font-weight: 850;
+  color: #ffffff;
+  letter-spacing: -1px;
+}
+
+/* Liked Songs Showcase box */
+.library-liked-showcase {
+  position: relative;
+  border-radius: 20px;
+  padding: 2.2rem;
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(88, 28, 135, 0.25) 0%, rgba(30, 27, 75, 0.4) 100%);
+  border: 1px solid rgba(168, 85, 247, 0.2);
+}
+
+.liked-glow-bg {
+  position: absolute;
+  top: -40%;
+  left: -20%;
+  width: 250px;
+  height: 250px;
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.35) 0%, transparent 70%);
+  filter: blur(35px);
+  pointer-events: none;
+}
+
+.liked-showcase-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.liked-tag {
+  align-self: flex-start;
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: var(--accent-purple-hover);
+  background: rgba(168, 85, 247, 0.12);
+  border: 1px solid rgba(168, 85, 247, 0.2);
+  padding: 0.35rem 0.9rem;
+  border-radius: 50px;
+  letter-spacing: 0.8px;
+}
+
+.library-liked-showcase h3 {
+  font-size: 2.8rem;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: -1.5px;
+}
+
+.liked-stats-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.btn-liked-play-circle {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--accent-purple);
+  border: none;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  box-shadow: 0 6px 20px rgba(168, 85, 247, 0.45);
+}
+
+.btn-liked-play-circle:hover {
+  background: var(--accent-purple-hover);
+  transform: scale(1.08) translateY(-1px);
+  box-shadow: 0 8px 25px rgba(168, 85, 247, 0.55);
+}
+
+.stats-txt {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+}
+
+.song-count {
+  font-size: 1.05rem;
+  font-weight: 750;
+  color: #ffffff;
+}
+
+.update-time {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+/* Sub-tabs styling */
+.library-subtabs-row {
+  display: flex;
+  gap: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 6px;
+}
+
+.subtab-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 8px 0;
+  position: relative;
+  transition: var(--transition-smooth);
+}
+
+.subtab-btn:hover {
+  color: #ffffff;
+}
+
+.subtab-btn.active {
+  color: #ffffff;
+}
+
+.subtab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -7px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent-purple);
+  border-radius: 2px;
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.6);
+}
+
+/* Subtab Content */
+.library-subtab-content {
+  min-height: 220px;
+}
+
+.liked-songs-sub-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.table-header-row {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  margin-bottom: 8px;
+}
+
+.col-num { width: 30px; text-align: left; }
+.col-title { flex-grow: 1; text-align: left; }
+.col-plays { width: 140px; text-align: left; }
+.col-time { width: 50px; text-align: right; }
+
+.liked-songs-sub-list .search-result-row {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  border-radius: 10px;
+  transition: var(--transition-smooth);
+}
+
+.liked-songs-sub-list .search-result-row:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.row-plays-count {
+  width: 140px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-align: left;
+}
+
+.library-playlists-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+/* Suggested Artists suggestion */
+.library-artists-suggestion {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.section-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.artists-scroll-container {
+  display: flex;
+  gap: 1.2rem;
+  overflow-x: auto;
+  padding: 8px 0;
+  scrollbar-width: none;
+}
+
+.artists-scroll-container::-webkit-scrollbar {
+  display: none;
+}
+
+.artists-scroll-container .artist-card {
+  flex-shrink: 0;
+  width: 105px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  background: transparent;
+}
+
+.artists-scroll-container .artist-avatar-img {
+  width: 75px !important;
+  height: 75px !important;
+  border-radius: 50%;
+  object-fit: cover;
+  transition: var(--transition-smooth);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.artists-scroll-container .artist-card:hover .artist-avatar-img {
+  transform: translateY(-2px);
+  box-shadow: var(--glow-purple);
+}
+
+.artists-scroll-container .artist-card h4 {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  text-align: center;
+}
+
+/* 2. Utility Column (Right) */
+.library-utility-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  text-align: left;
+}
+
+.util-action-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 1.5rem;
+  border-radius: 16px;
+}
+
+.plus-icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(168, 85, 247, 0.15);
+  color: var(--accent-purple-hover);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.util-action-card:hover .plus-icon-box {
+  background: var(--accent-purple);
+  color: #ffffff;
+  box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3);
+}
+
+.util-card-info h4 {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 3px;
+}
+
+.util-card-info p {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+/* Device Connectivity Card */
+.util-device-card {
+  padding: 1.5rem;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.devices-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.devices-header h4 {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.active-device-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  padding: 12px;
+  border-radius: 12px;
+}
+
+.active-device-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 10px #22c55e;
+  flex-shrink: 0;
+  animation: pulseGlow 1.5s infinite alternate ease-in-out;
+}
+
+.active-device-info h5 {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.device-desc {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #ffffff;
+}

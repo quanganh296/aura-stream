@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Heart, Share2, Trash2, Plus, Music } from 'lucide-react';
+import { Share2, Trash2, Music, Play, Pause, SkipForward, SkipBack, Volume2, Settings, PlusCircle } from 'lucide-react';
 import { useAudio } from '../context/AudioContext';
 import TrackImage from './TrackImage';
 import '../styles/FullPlayer.css';
@@ -14,7 +14,13 @@ const FullPlayer = () => {
     toggleLike,
     playTrack,
     removeFromQueue,
-    clearQueue
+    clearQueue,
+    isPlaying,
+    togglePlay,
+    nextTrack,
+    prevTrack,
+    currentTime,
+    duration
   } = useAudio();
 
   const activeLineRef = useRef(null);
@@ -40,6 +46,8 @@ const FullPlayer = () => {
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
+  const percent = duration > 0 ? (currentTime / duration) * 100 : 0;
+
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({
@@ -54,28 +62,71 @@ const FullPlayer = () => {
 
   return (
     <div className="full-player-container animate-fade">
-      {/* 1. Left Column: Track Info Showcase */}
+      {/* 1. Left Column: Track Info Showcase with Mini Player Overlay */}
       <div className="player-showcase-column">
         <div className="showcase-cover-wrapper">
-          <span className="showcase-badge">Trình phát nhạc - Đang phát</span>
           <TrackImage 
             src={currentTrack.cover_url} 
             alt={currentTrack.title} 
             className="showcase-cover-img" 
           />
+          
+          {/* Mini Player widget overlay matching the mockup in input_file_0 */}
+          <div className="mini-player-overlay">
+            <span className="mini-player-tag">Trình phát nhạc - Đang phát</span>
+            
+            {/* Inner visual card */}
+            <div className="mini-player-card">
+              <TrackImage 
+                src={currentTrack.cover_url} 
+                alt={currentTrack.title} 
+                className="mini-card-cover-img" 
+              />
+              <div className="mini-player-meta">
+                <h5>{currentTrack.title}</h5>
+                <p>{currentTrack.artist_name}</p>
+              </div>
+            </div>
+
+            {/* Playback Controls Row */}
+            <div className="mini-controls-row">
+              <button className="mini-ctrl-btn" onClick={prevTrack} title="Trước">
+                <SkipBack size={12} fill="currentColor" />
+              </button>
+              <button className="mini-ctrl-btn mini-toggle-btn" onClick={togglePlay} title={isPlaying ? 'Tạm dừng' : 'Phát'}>
+                {isPlaying ? <Pause size={12} fill="currentColor" /> : <Play size={12} fill="currentColor" style={{ transform: 'translateX(0.5px)' }} />}
+              </button>
+              <button className="mini-ctrl-btn" onClick={nextTrack} title="Kế tiếp">
+                <SkipForward size={12} fill="currentColor" />
+              </button>
+            </div>
+
+            {/* Timeline Slider and volume icon */}
+            <div className="mini-timeline-row">
+              <div className="mini-slider-track">
+                <div className="mini-slider-progress" style={{ width: `${percent}%` }}></div>
+              </div>
+              <div className="mini-utils-group">
+                <Volume2 size={10} className="mini-util-icon" />
+                <Settings size={10} className="mini-util-icon" />
+              </div>
+            </div>
+          </div>
         </div>
         
+        {/* Left aligned metadata */}
         <div className="showcase-meta">
           <h2>{currentTrack.title}</h2>
           <p>{currentTrack.artist_name} &bull; {currentTrack.album_name || '2024'}</p>
         </div>
 
+        {/* Action buttons matching mockup pill design */}
         <div className="showcase-actions">
           <button 
             className={`btn-showcase-like ${likedSongIds.has(currentTrack.id) ? 'liked' : ''}`}
             onClick={() => toggleLike(currentTrack.id)}
           >
-            <Heart size={16} fill={likedSongIds.has(currentTrack.id) ? '#ffffff' : 'none'} />
+            <PlusCircle size={16} />
             <span>Lưu vào thư viện</span>
           </button>
           
@@ -133,7 +184,7 @@ const FullPlayer = () => {
           ) : (
             queue
               .filter(s => s.id !== currentTrack.id)
-              .map((s, idx) => (
+              .map(s => (
                 <div 
                   key={s.id} 
                   className="queue-itemclickable clickable"

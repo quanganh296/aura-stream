@@ -1,0 +1,336 @@
+/* Artist Profile View Styling */
+
+.artist-profile-view {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 1rem 0;
+  color: #ffffff;
+}
+
+/* 1. Banner Hero section */
+.artist-banner-hero {
+  position: relative;
+  height: 380px;
+  border-radius: 20px;
+  background-size: cover;
+  background-position: center;
+  background-image: linear-gradient(135deg, rgba(88, 28, 135, 0.4) 0%, rgba(30, 27, 75, 0.5) 100%), url('https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1200&q=80');
+  display: flex;
+  align-items: flex-end;
+  padding: 3rem;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.artist-banner-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(to bottom, transparent 30%, rgba(6, 9, 19, 0.88) 100%);
+  z-index: 1;
+}
+
+.artist-hero-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+}
+
+.verified-badge-row {
+  display: flex;
+  align-items: center;
+}
+
+.verified-badge-pill {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #ffffff;
+  background: var(--accent-purple);
+  padding: 5px 12px;
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
+}
+
+.check-icon {
+  stroke-width: 3px;
+}
+
+.artist-hero-content h1 {
+  font-size: 4rem;
+  font-weight: 900;
+  letter-spacing: -2px;
+  color: #ffffff;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+  margin: 0.2rem 0;
+}
+
+.monthly-listeners {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: 0.8rem;
+}
+
+.artist-action-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-artist-play-shuffle {
+  background: var(--accent-purple);
+  border: none;
+  color: #ffffff;
+  padding: 0.8rem 1.8rem;
+  border-radius: 50px;
+  font-weight: 750;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3);
+}
+
+.btn-artist-play-shuffle:hover {
+  background: var(--accent-purple-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(168, 85, 247, 0.4);
+}
+
+.btn-artist-follow {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  padding: 0.8rem 1.8rem;
+  border-radius: 50px;
+  font-weight: 750;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.btn-artist-follow:hover {
+  border-color: #ffffff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.btn-artist-follow.following {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.btn-artist-more {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  transition: var(--transition-smooth);
+}
+
+.btn-artist-more:hover {
+  color: #ffffff;
+}
+
+/* 2. Grid sections container */
+.artist-sections-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.artist-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.2rem;
+}
+
+.artist-section-header h3 {
+  font-size: 1.4rem;
+  font-weight: 850;
+  color: #ffffff;
+  letter-spacing: -0.5px;
+}
+
+.see-all-link {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.see-all-link:hover {
+  color: #ffffff;
+}
+
+/* Popular list styling */
+.artist-popular-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.artist-popular-row {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  border-radius: 12px;
+  transition: var(--transition-smooth);
+}
+
+.artist-popular-row:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.row-num {
+  width: 24px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-align: left;
+}
+
+.artist-row-cover {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  object-fit: cover;
+  margin-right: 16px;
+}
+
+.artist-row-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+  flex-grow: 1;
+}
+
+.artist-row-meta h4 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.artist-row-meta p {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.row-duration {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+/* Discography list */
+.artist-discography-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.2rem;
+}
+
+.album-card {
+  padding: 1rem;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: left;
+}
+
+.album-cover-fallback {
+  width: 100%;
+  aspect-ratio: 1;
+  background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-blue) 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  opacity: 0.7;
+}
+
+.album-card h4 {
+  font-size: 0.95rem;
+  font-weight: 750;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.album-card p {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+/* Circular Fans Also Like Card */
+.artist-fans-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.2rem;
+}
+
+.artist-fan-circle-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  padding: 1rem;
+  background: transparent;
+  cursor: pointer;
+}
+
+.fan-circle-avatar-wrapper {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: var(--transition-smooth);
+}
+
+.fan-circle-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.artist-fan-circle-card:hover .fan-circle-avatar-wrapper {
+  transform: scale(1.04) translateY(-3px);
+  box-shadow: var(--glow-purple);
+  border-color: var(--accent-purple);
+}
+
+.artist-fan-circle-card h4 {
+  font-size: 0.95rem;
+  font-weight: 750;
+  color: #ffffff;
+  margin-top: 4px;
+}
+
+.artist-fan-circle-card p {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 700;
+  letter-spacing: 1px;
+}

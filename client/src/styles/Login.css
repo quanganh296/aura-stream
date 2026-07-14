@@ -66,12 +66,14 @@
 
 .brand-logo-icon {
   display: flex;
-  align-items: flex-end;
+  align-items: center; /* Center wave bars vertically */
+  justify-content: center; /* Center wave bars horizontally */
   gap: 4px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   margin-bottom: 0.8rem;
-  background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
-  padding: 8px 12px;
+  background: var(--accent-purple);
+  padding: 8px;
   border-radius: 12px;
   box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3);
 }
@@ -408,4 +410,164 @@
   font-weight: 700;
   letter-spacing: 2px;
   text-align: center;
+}
+
+/* Labeled social buttons for signup */
+.social-grid-two {
+  grid-template-columns: repeat(2, 1fr) !important;
+}
+
+.btn-social-labeled {
+  gap: 10px;
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.btn-social-labeled:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Policy links styling */
+.auth-policy-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 1.2rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.policy-link {
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: var(--transition-smooth);
+}
+
+.policy-link:hover {
+  color: #ffffff;
+}
+
+.dot-separator {
+  color: var(--text-muted);
+}
+
+/* Gradient btn style */
+.gradient-btn {
+  background: linear-gradient(to right, #8b5cf6, #3b82f6) !important;
+  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3) !important;
+}
+
+.gradient-btn:hover {
+  background: linear-gradient(to right, #a78bfa, #60a5fa) !important;
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4) !important;
+}
+
+.btn-content-flex {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.arrow {
+  font-size: 1.1rem;
+}
+
+/* Text only Brand Header (Signup) */
+.text-only-brand h2 {
+  font-size: 2.8rem;
+  font-weight: 800;
+  background: linear-gradient(to right, #f472b6, #c084fc, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -1.5px;
+}
+
+.text-only-brand p {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 4px;
+  margin-top: 0.4rem;
+}
+
+/* Floating Background Cards for Signup mockup */
+.floating-card {
+  position: absolute;
+  width: 200px;
+  height: 280px;
+  border-radius: 20px;
+  padding: 1rem;
+  background: rgba(13, 17, 29, 0.4);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.left-card {
+  top: 25%;
+  left: 5%;
+  transform: rotate(-12deg);
+  animation: floatLeft 6s ease-in-out infinite alternate;
+}
+
+.right-card {
+  bottom: 20%;
+  right: 5%;
+  transform: rotate(15deg);
+  animation: floatRight 6s ease-in-out infinite alternate;
+}
+
+.floating-card-art {
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+}
+
+.wave-art {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(59, 130, 246, 0.1) 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.wave-art::after {
+  content: '';
+  position: absolute;
+  top: -20%;
+  left: -20%;
+  right: -20%;
+  bottom: -20%;
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.3) 0%, transparent 60%);
+  filter: blur(20px);
+}
+
+.audio-art {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(168, 85, 247, 0.1) 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.audio-art::after {
+  content: '';
+  position: absolute;
+  top: -20%;
+  left: -20%;
+  right: -20%;
+  bottom: -20%;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.3) 0%, transparent 60%);
+  filter: blur(20px);
+}
+
+@keyframes floatLeft {
+  0% { transform: translateY(0) rotate(-12deg); }
+  100% { transform: translateY(-15px) rotate(-10deg); }
+}
+
+@keyframes floatRight {
+  0% { transform: translateY(0) rotate(15deg); }
+  100% { transform: translateY(-15px) rotate(13deg); }
 }
