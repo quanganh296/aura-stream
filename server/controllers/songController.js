@@ -173,6 +173,51 @@ const getForYouMixes = async (req, res) => {
   }
 };
 
+// Helper function to post-process raw lyrics using Gemini AI
+const correctLyricsWithGemini = async (rawLyricsJsonString, songTitle) => {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    console.log('Notice: GEMINI_API_KEY is not set. Skipping Gemini post-processing lyric correction.');
+    return rawLyricsJsonString;
+  }
+
+  try {
+    const { GoogleGenerativeAI } = require("@google/generative-ai");
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-1.5-flash",
+      generationConfig: { responseMimeType: "application/json" }
+    });
+
+    const prompt = `
+Bạn là một chuyên gia hiệu đính và biên tập âm nhạc V-Pop. 
+Tôi có một danh sách lời bài hát thô nhận diện qua âm thanh của bài hát "${songTitle}". 
+Lời bài hát thô này có một số lỗi chính tả tiếng Việt (nhầm dấu, nhầm âm) và đặc biệt là lỗi nhận diện các câu tiếng Anh chen giữa bài hát sang từ tiếng Việt nghe đồng âm (ví dụ: "đang mì bên bên không" thực chất phải là "take me back back home", "room 9.5" thực chất là "from 9 to 5", "Nhật sẽ" -> "Nhạc giờ").
+
+Hãy đối chiếu, sửa các lỗi chính tả và sửa các lỗi đồng âm này về đúng lời gốc tiếng Việt và tiếng Anh chính xác nhất có thể.
+
+YÊU CẦU:
+1. Hãy sửa trường "text" trong các phần tử JSON. Giữ nguyên trường "time" không thay đổi.
+2. Trả về kết quả dưới dạng một mảng JSON có cùng định dạng chính xác như đầu vào: [{"time": number, "text": string}].
+3. Chỉ trả về duy nhất chuỗi mảng JSON hợp lệ, không thêm bất kỳ văn bản giải thích nào khác ngoài JSON.
+
+Dữ liệu lời bài hát thô dạng JSON:
+${rawLyricsJsonString}
+`;
+
+    const result = await model.generateContent(prompt);
+    const text = result.response.text().trim();
+    
+    // Validate JSON structure
+    JSON.parse(text); 
+    console.log('Gemini lyrics post-correction completed successfully.');
+    return text;
+  } catch (error) {
+    console.error('Gemini post-processing failed:', error.message);
+    return rawLyricsJsonString; // Fallback to raw lyrics
+  }
+};
+
 // @desc    Upload a new song and automatically transcribe lyrics
 // @route   POST /api/songs/upload
 // @access  Public (or Private)
@@ -225,20 +270,23 @@ const uploadSong = async (req, res) => {
       // Parse JSON output from Python script
       const data = JSON.parse(stdout.trim());
       const durationSeconds = data.duration_seconds || 180;
-      const lyricsJson = data.lyrics_json || '[]';
+      const rawLyricsJson = data.lyrics_json || '[]';
+
+      // Correct lyrics spelling using Gemini AI
+      const finalLyricsJson = await correctLyricsWithGemini(rawLyricsJson, title);
 
       // Insert song details into database
       const [result] = await pool.execute(`
         INSERT INTO songs (title, artist_id, album_name, cover_url, audio_url, duration_seconds, lyrics_json)
         VALUES (?, ?, ?, ?, ?, ?, ?)
-      `, [title, artist_id, album_name || 'Single', coverUrl, audioUrl, durationSeconds, lyricsJson]);
+      `, [title, artist_id, album_name || 'Single', coverUrl, audioUrl, durationSeconds, finalLyricsJson]);
 
       res.status(201).json({
         message: 'Song uploaded and transcribed successfully!',
         songId: result.insertId,
         title,
         durationSeconds,
-        lyricsJson: JSON.parse(lyricsJson),
+        lyricsJson: JSON.parse(finalLyricsJson),
         audioUrl
       });
     } catch (parseError) {
