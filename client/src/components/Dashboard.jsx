@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Home, Compass, Library, PlusSquare, Heart, Search, Bell, Settings, LogOut, 
-  Play, Plus, Music, HelpCircle, Check, Volume2, Maximize2, User, ListMusic,
+  Home, Compass, Library, Heart, Search, Bell, Settings, LogOut, 
+  Play, Plus, Music, Check, User, ListMusic,
   ChevronRight, Sliders
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -36,6 +36,22 @@ const Dashboard = () => {
   // Navigation states
   const [activeTab, setActiveTab] = useState('home'); // 'home', 'browse', 'library', 'liked'
   const [showFullPlayer, setShowFullPlayer] = useState(false);
+
+  // AI Upload states
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploadTitle, setUploadTitle] = useState('');
+  const [uploadArtistId, setUploadArtistId] = useState(1);
+  const [uploadAlbumName, setUploadAlbumName] = useState('');
+  const [uploadFile, setUploadFile] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState('');
+
+  // Automatically update default upload artist when artists list changes
+  useEffect(() => {
+    if (trendingArtists.length > 0) {
+      setUploadArtistId(trendingArtists[0].id);
+    }
+  }, [trendingArtists]);
 
   // Redirect if logged out
   useEffect(() => {
@@ -118,6 +134,40 @@ const Dashboard = () => {
       setPlaylists([...playlists, newPlaylist]);
     } catch (err) {
       console.error('Error creating playlist:', err);
+    }
+  };
+
+  const handleUploadSubmit = async (e) => {
+    e.preventDefault();
+    if (!uploadFile) return;
+
+    setIsUploading(true);
+    setUploadStatus('Đang tải tệp nhạc lên máy chủ...');
+
+    const formData = new FormData();
+    formData.append('title', uploadTitle);
+    formData.append('artist_id', uploadArtistId);
+    formData.append('album_name', uploadAlbumName || 'Single');
+    formData.append('audio', uploadFile);
+
+    try {
+      setUploadStatus('Tải lên thành công! AI đang tách giọng hát và trích xuất lời nhạc...');
+      await songAPI.upload(formData);
+      
+      setIsUploading(false);
+      setShowUploadModal(false);
+      
+      // Clear inputs
+      setUploadTitle('');
+      setUploadAlbumName('');
+      setUploadFile(null);
+      
+      alert('Đã tải nhạc lên và tự động trích lời bằng AI thành công!');
+      fetchDashboardData(); // Refresh song listings
+    } catch (err) {
+      console.error(err);
+      setIsUploading(false);
+      alert(`Lỗi khi xử lý tải nhạc: ${err.message}`);
     }
   };
 
@@ -462,6 +512,7 @@ const Dashboard = () => {
               handlePlayCard={handlePlayCard}
               handleCreatePlaylist={handleCreatePlaylist}
               setActiveTab={setActiveTab}
+              setShowUploadModal={setShowUploadModal}
             />
           ) : activeTab === 'profile' ? (
             /* User Profile View */
@@ -531,6 +582,79 @@ const Dashboard = () => {
         showFullPlayer={showFullPlayer} 
         setShowFullPlayer={setShowFullPlayer} 
       />
+
+      {/* AI Song Upload & Transcribe Modal */}
+      {showUploadModal && (
+        <div className="upload-modal-overlay">
+          <div className="upload-modal-container glass-panel animate-fade">
+            <div className="upload-modal-header">
+              <h3>Tải nhạc & Tự động trích lời bằng AI</h3>
+              <button className="btn-close-modal" onClick={() => { if (!isUploading) setShowUploadModal(false); }}>&times;</button>
+            </div>
+            
+            {isUploading ? (
+              <div className="upload-loading-view">
+                <div className="ai-pulse-spinner"></div>
+                <h4>Hệ thống AI đang xử lý...</h4>
+                <p className="loading-subtext">{uploadStatus}</p>
+                <div className="ai-disclaimer">
+                  Hệ thống AI đang chạy phân tích tệp nhạc trên CPU để tách âm, nhận dạng giọng hát tiếng Việt và gán mốc thời gian lời bài hát. Quá trình này mất khoảng 1-2 phút tùy thuộc vào độ dài bài hát. Vui lòng không đóng cửa sổ này!
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleUploadSubmit} className="upload-form">
+                <div className="form-group">
+                  <label>Tiêu đề bài hát *</label>
+                  <input 
+                    type="text" 
+                    required 
+                    placeholder="Nhập tên bài hát"
+                    value={uploadTitle}
+                    onChange={(e) => setUploadTitle(e.target.value)}
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label>Nghệ sĩ hát *</label>
+                  <select 
+                    value={uploadArtistId} 
+                    onChange={(e) => setUploadArtistId(Number(e.target.value))}
+                  >
+                    {trendingArtists.map(a => (
+                      <option key={a.id} value={a.id}>{a.name}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div className="form-group">
+                  <label>Album (Tùy chọn)</label>
+                  <input 
+                    type="text" 
+                    placeholder="Single"
+                    value={uploadAlbumName}
+                    onChange={(e) => setUploadAlbumName(e.target.value)}
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label>Tệp nhạc (MP3, MP4, WAV) *</label>
+                  <input 
+                    type="file" 
+                    required 
+                    accept=".mp3,.mp4,.wav,.m4a"
+                    onChange={(e) => setUploadFile(e.target.files[0])}
+                  />
+                  <small className="file-hint">Bạn có thể chọn file nhạc mp3 hoặc video mp4 để AI trích lời.</small>
+                </div>
+                
+                <button type="submit" className="btn-upload-submit">
+                  Tải lên & Trích lời bằng AI
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -1017,7 +1141,7 @@ const ArtistProfileView = ({ artistId, songs, trendingArtists, handlePlayCard, s
 };
 
 // Sub-component for User Library View
-const UserLibraryView = ({ playlists, likedSongs, songs, trendingArtists, handlePlayCard, handleCreatePlaylist, setActiveTab }) => {
+const UserLibraryView = ({ playlists, likedSongs, songs, trendingArtists, handlePlayCard, handleCreatePlaylist, setActiveTab, setShowUploadModal }) => {
   const [activeSubTab, setActiveSubTab] = useState('liked'); // 'liked', 'playlists', 'albums', 'artists'
 
   const displaySongs = likedSongs.length > 0 ? likedSongs : songs.slice(0, 3);
@@ -1176,6 +1300,16 @@ const UserLibraryView = ({ playlists, likedSongs, songs, trendingArtists, handle
             <div className="util-card-info">
               <h4>Tạo Playlist mới</h4>
               <p>Tổ chức âm nhạc theo cách của bạn</p>
+            </div>
+          </div>
+
+          <div className="util-action-card glass-panel clickable-card" onClick={() => setShowUploadModal(true)}>
+            <div className="plus-icon-box" style={{ background: 'linear-gradient(135deg, #a855f7 0%, #d946ef 100%)', color: '#ffffff' }}>
+              <Music size={20} />
+            </div>
+            <div className="util-card-info">
+              <h4>Tải nhạc lên (AI)</h4>
+              <p>Tự động trích lời nhạc từ âm thanh</p>
             </div>
           </div>
           

@@ -1,4 +1,7 @@
 const pool = require('../config/db');
+const { exec } = require('child_process');
+const path = require('path');
+const fs = require('fs');
 
 // @desc    Get all songs
 // @route   GET /api/songs
@@ -170,6 +173,94 @@ const getForYouMixes = async (req, res) => {
   }
 };
 
+// @desc    Upload a new song and automatically transcribe lyrics
+// @route   POST /api/songs/upload
+// @access  Public (or Private)
+const uploadSong = async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ message: 'No audio/video file uploaded' });
+  }
+
+  const { title, artist_id, album_name } = req.body;
+  if (!title || !artist_id) {
+    // Clean up uploaded file if validation fails
+    try {
+      fs.unlinkSync(req.file.path);
+    } catch (err) {}
+    return res.status(400).json({ message: 'Title and artist_id are required' });
+  }
+
+  const filePath = req.file.path; // Absolute path to uploaded file
+  const audioUrl = `/assets/uploads/${req.file.filename}`; // Static URL for client playing
+  const coverUrl = '/assets/covers/anh_den_dem.jpg'; // Placeholder cover
+
+  // Execute python transcribe script
+  const scriptPath = path.join(__dirname, '../scripts/transcribe.py');
+  
+  // Note: we wrap file path in quotes to handle whitespaces in filename
+  const cmd = `python "${scriptPath}" "${filePath}"`;
+
+  exec(cmd, async (error, stdout, stderr) => {
+    if (error) {
+      console.error(`Transcription error: ${stderr || error.message}`);
+      // Fallback: insert song with empty lyrics if transcription fails
+      try {
+        const [result] = await pool.execute(`
+          INSERT INTO songs (title, artist_id, album_name, cover_url, audio_url, duration_seconds, lyrics_json)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `, [title, artist_id, album_name || 'Single', coverUrl, audioUrl, 180, '[]']);
+        
+        return res.status(201).json({ 
+          message: 'Song uploaded, but automatic transcription failed. Song inserted with default settings.',
+          songId: result.insertId,
+          audioUrl,
+          transcriptionError: stderr || error.message
+        });
+      } catch (dbError) {
+        return res.status(500).json({ message: 'Error inserting song after transcription failure', error: dbError.message });
+      }
+    }
+
+    try {
+      // Parse JSON output from Python script
+      const data = JSON.parse(stdout.trim());
+      const durationSeconds = data.duration_seconds || 180;
+      const lyricsJson = data.lyrics_json || '[]';
+
+      // Insert song details into database
+      const [result] = await pool.execute(`
+        INSERT INTO songs (title, artist_id, album_name, cover_url, audio_url, duration_seconds, lyrics_json)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `, [title, artist_id, album_name || 'Single', coverUrl, audioUrl, durationSeconds, lyricsJson]);
+
+      res.status(201).json({
+        message: 'Song uploaded and transcribed successfully!',
+        songId: result.insertId,
+        title,
+        durationSeconds,
+        lyricsJson: JSON.parse(lyricsJson),
+        audioUrl
+      });
+    } catch (parseError) {
+      console.error(`Parse error of transcription stdout: ${parseError.message}`);
+      try {
+        const [result] = await pool.execute(`
+          INSERT INTO songs (title, artist_id, album_name, cover_url, audio_url, duration_seconds, lyrics_json)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `, [title, artist_id, album_name || 'Single', coverUrl, audioUrl, 180, '[]']);
+
+        res.status(201).json({
+          message: 'Song uploaded, but error parsing transcription results.',
+          songId: result.insertId,
+          audioUrl
+        });
+      } catch (dbError) {
+        return res.status(500).json({ message: 'Error inserting song after parse failure', error: dbError.message });
+      }
+    }
+  });
+};
+
 module.exports = {
   getSongs,
   getSongById,
@@ -177,5 +268,6 @@ module.exports = {
   getTrendingArtists,
   getRecentlyPlayed,
   addRecentlyPlayed,
-  getForYouMixes
+  getForYouMixes,
+  uploadSong
 };

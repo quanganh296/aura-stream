@@ -61,7 +61,22 @@ export const songAPI = {
   addHistory: (songId) => apiFetch('/songs/history', {
     method: 'POST',
     body: JSON.stringify({ songId })
-  })
+  }),
+  upload: async (formData) => {
+    const token = localStorage.getItem('aura_token');
+    const response = await fetch('http://localhost:5000/api/songs/upload', {
+      method: 'POST',
+      headers: {
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      },
+      body: formData
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `API Error: ${response.status}`);
+    }
+    return response.json();
+  }
 };
 
 export const playlistAPI = {
