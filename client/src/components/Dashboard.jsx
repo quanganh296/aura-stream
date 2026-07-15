@@ -37,12 +37,13 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('home'); // 'home', 'browse', 'library', 'liked'
   const [showFullPlayer, setShowFullPlayer] = useState(false);
 
-  // AI Upload states
+  // Lyrics Manual Upload states
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploadTitle, setUploadTitle] = useState('');
   const [uploadArtistId, setUploadArtistId] = useState(1);
   const [uploadAlbumName, setUploadAlbumName] = useState('');
   const [uploadFile, setUploadFile] = useState(null);
+  const [uploadLyricsFile, setUploadLyricsFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState('');
 
@@ -139,19 +140,23 @@ const Dashboard = () => {
 
   const handleUploadSubmit = async (e) => {
     e.preventDefault();
-    if (!uploadFile) return;
+    if (!uploadFile || !uploadLyricsFile) {
+      alert('Vui lòng chọn cả tệp nhạc và tệp lời bài hát!');
+      return;
+    }
 
     setIsUploading(true);
-    setUploadStatus('Đang tải tệp nhạc lên máy chủ...');
+    setUploadStatus('Đang chuẩn bị tệp tin tải lên...');
 
     const formData = new FormData();
     formData.append('title', uploadTitle);
     formData.append('artist_id', uploadArtistId);
     formData.append('album_name', uploadAlbumName || 'Single');
     formData.append('audio', uploadFile);
+    formData.append('lyrics', uploadLyricsFile);
 
     try {
-      setUploadStatus('Tải lên thành công! AI đang tách giọng hát và trích xuất lời nhạc...');
+      setUploadStatus('Đang tải tệp nhạc và lời bài hát lên máy chủ để xử lý đồng bộ...');
       await songAPI.upload(formData);
       
       setIsUploading(false);
@@ -161,13 +166,14 @@ const Dashboard = () => {
       setUploadTitle('');
       setUploadAlbumName('');
       setUploadFile(null);
+      setUploadLyricsFile(null);
       
-      alert('Đã tải nhạc lên và tự động trích lời bằng AI thành công!');
+      alert('Tải bài hát và lời bài hát lên thành công! Lời nhạc đã được đồng bộ hóa.');
       fetchDashboardData(); // Refresh song listings
     } catch (err) {
       console.error(err);
       setIsUploading(false);
-      alert(`Lỗi khi xử lý tải nhạc: ${err.message}`);
+      alert(`Lỗi khi tải nhạc và lời bài hát: ${err.message}`);
     }
   };
 
@@ -583,22 +589,22 @@ const Dashboard = () => {
         setShowFullPlayer={setShowFullPlayer} 
       />
 
-      {/* AI Song Upload & Transcribe Modal */}
+      {/* Song & Lyrics Upload Modal */}
       {showUploadModal && (
         <div className="upload-modal-overlay">
           <div className="upload-modal-container glass-panel animate-fade">
             <div className="upload-modal-header">
-              <h3>Tải nhạc & Tự động trích lời bằng AI</h3>
+              <h3>Tải lên Bài hát & Lời bài hát</h3>
               <button className="btn-close-modal" onClick={() => { if (!isUploading) setShowUploadModal(false); }}>&times;</button>
             </div>
             
             {isUploading ? (
               <div className="upload-loading-view">
                 <div className="ai-pulse-spinner"></div>
-                <h4>Hệ thống AI đang xử lý...</h4>
+                <h4>Hệ thống đang xử lý tệp...</h4>
                 <p className="loading-subtext">{uploadStatus}</p>
                 <div className="ai-disclaimer">
-                  Hệ thống AI đang chạy phân tích tệp nhạc trên CPU để tách âm, nhận dạng giọng hát tiếng Việt và gán mốc thời gian lời bài hát. Quá trình này mất khoảng 1-2 phút tùy thuộc vào độ dài bài hát. Vui lòng không đóng cửa sổ này!
+                  Hệ thống đang tải lên tệp nhạc và tệp lời bài hát của bạn, đo đạc thời lượng chính xác và xử lý đồng bộ hóa. Quá trình này sẽ hoàn tất trong giây lát. Vui lòng không đóng cửa sổ này!
                 </div>
               </div>
             ) : (
@@ -644,11 +650,22 @@ const Dashboard = () => {
                     accept=".mp3,.mp4,.wav,.m4a"
                     onChange={(e) => setUploadFile(e.target.files[0])}
                   />
-                  <small className="file-hint">Bạn có thể chọn file nhạc mp3 hoặc video mp4 để AI trích lời.</small>
+                  <small className="file-hint">Hỗ trợ các định dạng mp3, wav, m4a, mp4.</small>
+                </div>
+
+                <div className="form-group">
+                  <label>Tệp lời bài hát (TXT, LRC) *</label>
+                  <input 
+                    type="file" 
+                    required 
+                    accept=".txt,.lrc"
+                    onChange={(e) => setUploadLyricsFile(e.target.files[0])}
+                  />
+                  <small className="file-hint">Tải lên tệp .lrc để chạy chữ chuẩn khớp từng giây, hoặc tệp .txt thường để hệ thống tự phân bổ đều câu hát.</small>
                 </div>
                 
                 <button type="submit" className="btn-upload-submit">
-                  Tải lên & Trích lời bằng AI
+                  Tải lên & Đồng bộ lời bài hát
                 </button>
               </form>
             )}
@@ -1308,8 +1325,8 @@ const UserLibraryView = ({ playlists, likedSongs, songs, trendingArtists, handle
               <Music size={20} />
             </div>
             <div className="util-card-info">
-              <h4>Tải nhạc lên (AI)</h4>
-              <p>Tự động trích lời nhạc từ âm thanh</p>
+              <h4>Tải bài hát mới lên</h4>
+              <p>Tải nhạc và tệp lời hát đồng bộ (.txt, .lrc)</p>
             </div>
           </div>
           

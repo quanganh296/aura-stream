@@ -35,10 +35,20 @@ const upload = multer({
   storage,
   fileFilter: (req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
-    if (ext === '.mp3' || ext === '.mp4' || ext === '.wav' || ext === '.m4a') {
-      cb(null, true);
+    if (file.fieldname === 'audio') {
+      if (['.mp3', '.mp4', '.wav', '.m4a'].includes(ext)) {
+        cb(null, true);
+      } else {
+        cb(new Error('Chỉ chấp nhận tệp nhạc (mp3, mp4, wav, m4a)!'), false);
+      }
+    } else if (file.fieldname === 'lyrics') {
+      if (['.txt', '.lrc'].includes(ext)) {
+        cb(null, true);
+      } else {
+        cb(new Error('Chỉ chấp nhận tệp lời bài hát (txt, lrc)!'), false);
+      }
     } else {
-      cb(new Error('Only audio (mp3, wav, m4a) and video (mp4) files are allowed!'), false);
+      cb(new Error('Trường tải lên không hợp lệ!'), false);
     }
   }
 });
@@ -50,8 +60,8 @@ router.get('/search', searchSongs);
 router.get('/artists/trending', getTrendingArtists);
 router.get('/mixes/for-you', getForYouMixes);
 
-// Song uploading and automated transcription
-router.post('/upload', protect, upload.single('audio'), uploadSong);
+// Song uploading with manual lyrics upload (audio and lyrics files)
+router.post('/upload', protect, upload.fields([{ name: 'audio', maxCount: 1 }, { name: 'lyrics', maxCount: 1 }]), uploadSong);
 
 // Listening history requires user context
 router.get('/history/recent', protect, getRecentlyPlayed);

@@ -173,140 +173,116 @@ const getForYouMixes = async (req, res) => {
   }
 };
 
-// Helper function to post-process raw lyrics using Gemini AI
-const correctLyricsWithGemini = async (rawLyricsJsonString, songTitle) => {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    console.log('Notice: GEMINI_API_KEY is not set. Skipping Gemini post-processing lyric correction.');
-    return rawLyricsJsonString;
-  }
-
-  try {
-    const { GoogleGenerativeAI } = require("@google/generative-ai");
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-3.1-flash-lite",
-      generationConfig: { responseMimeType: "application/json" }
+// Helper function to get audio file duration using ffprobe
+const getAudioDuration = (filePath) => {
+  return new Promise((resolve) => {
+    const cmd = `ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${filePath}"`;
+    exec(cmd, (error, stdout, stderr) => {
+      if (error) {
+        console.error('ffprobe duration detection error:', stderr || error.message);
+        resolve(180); // Default fallback of 3 minutes
+      } else {
+        const seconds = parseFloat(stdout.trim());
+        resolve(isNaN(seconds) ? 180 : Math.floor(seconds));
+      }
     });
-
-    const prompt = `
-Bạn là một chuyên gia hiệu đính và biên tập âm nhạc V-Pop. 
-Tôi có một danh sách lời bài hát thô nhận diện qua âm thanh của bài hát "${songTitle}". 
-Lời bài hát thô này có một số lỗi chính tả tiếng Việt (nhầm dấu, nhầm âm) và đặc biệt là lỗi nhận diện các câu tiếng Anh chen giữa bài hát sang từ tiếng Việt nghe đồng âm (ví dụ: "đang mì bên bên không" thực chất phải là "take me back back home", "room 9.5" thực chất là "from 9 to 5", "Nhật sẽ" -> "Nhạc giờ").
-
-Hãy đối chiếu, sửa các lỗi chính tả và sửa các lỗi đồng âm này về đúng lời gốc tiếng Việt và tiếng Anh chính xác nhất có thể.
-
-YÊU CẦU:
-1. Hãy sửa trường "text" trong các phần tử JSON. Giữ nguyên trường "time" không thay đổi.
-2. Trả về kết quả dưới dạng một mảng JSON có cùng định dạng chính xác như đầu vào: [{"time": number, "text": string}].
-3. Chỉ trả về duy nhất chuỗi mảng JSON hợp lệ, không thêm bất kỳ văn bản giải thích nào khác ngoài JSON.
-
-Dữ liệu lời bài hát thô dạng JSON:
-${rawLyricsJsonString}
-`;
-
-    const result = await model.generateContent(prompt);
-    const text = result.response.text().trim();
-    
-    // Validate JSON structure
-    JSON.parse(text); 
-    console.log('Gemini lyrics post-correction completed successfully.');
-    return text;
-  } catch (error) {
-    console.error('Gemini post-processing failed:', error.message);
-    return rawLyricsJsonString; // Fallback to raw lyrics
-  }
+  });
 };
 
-// @desc    Upload a new song and automatically transcribe lyrics
+// Helper function to parse lyrics from LRC or plain TXT files
+const parseLyrics = (fileContent, durationSeconds) => {
+  const lines = fileContent.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+  const lrcRegex = /^\[(\d+):(\d+)(?:\.(\d+))?\](.*)$/;
+  
+  const parsedLrc = [];
+  
+  for (const line of lines) {
+    const match = line.match(lrcRegex);
+    if (match) {
+      const min = parseInt(match[1], 10);
+      const sec = parseInt(match[2], 10);
+      const ms = match[3] ? parseInt(match[3], 10) : 0;
+      const text = match[4].trim();
+      
+      const timeInSecs = min * 60 + sec + (ms > 0 ? ms / 100 : 0);
+      parsedLrc.push({ time: Math.floor(timeInSecs), text });
+    }
+  }
+
+  // If standard LRC tags are successfully parsed, sort and return them
+  if (parsedLrc.length > 0) {
+    return parsedLrc.sort((a, b) => a.time - b.time);
+  }
+
+  // Fallback: If plain TXT (no timestamps), distribute lines evenly across the song's duration
+  const totalLines = lines.length;
+  if (totalLines === 0) return [];
+  
+  const step = durationSeconds / totalLines;
+  return lines.map((text, idx) => ({
+    time: Math.floor(idx * step),
+    text
+  }));
+};
+
+// @desc    Upload a new song and manual lyrics file (LRC/TXT)
 // @route   POST /api/songs/upload
 // @access  Public (or Private)
 const uploadSong = async (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ message: 'No audio/video file uploaded' });
+  const audioFile = req.files?.audio?.[0];
+  const lyricsFile = req.files?.lyrics?.[0];
+
+  if (!audioFile || !lyricsFile) {
+    // Clean up any uploaded file on missing inputs
+    if (audioFile) try { fs.unlinkSync(audioFile.path); } catch (e) {}
+    if (lyricsFile) try { fs.unlinkSync(lyricsFile.path); } catch (e) {}
+    return res.status(400).json({ message: 'Both audio file and lyrics file are required!' });
   }
 
   const { title, artist_id, album_name } = req.body;
   if (!title || !artist_id) {
-    // Clean up uploaded file if validation fails
-    try {
-      fs.unlinkSync(req.file.path);
-    } catch (err) {}
-    return res.status(400).json({ message: 'Title and artist_id are required' });
+    // Clean up uploaded files
+    try { fs.unlinkSync(audioFile.path); } catch (e) {}
+    try { fs.unlinkSync(lyricsFile.path); } catch (e) {}
+    return res.status(400).json({ message: 'Title and artist_id are required!' });
   }
 
-  const filePath = req.file.path; // Absolute path to uploaded file
-  const audioUrl = `/assets/uploads/${req.file.filename}`; // Static URL for client playing
-  const coverUrl = '/assets/covers/anh_den_dem.jpg'; // Placeholder cover
+  try {
+    // Detect audio file duration using ffprobe
+    const durationSeconds = await getAudioDuration(audioFile.path);
+    
+    // Read and parse lyrics file
+    const lyricsContent = fs.readFileSync(lyricsFile.path, 'utf8');
+    const lyricsJson = parseLyrics(lyricsContent, durationSeconds);
+    const lyricsJsonStr = JSON.stringify(lyricsJson);
 
-  // Execute python transcribe script
-  const scriptPath = path.join(__dirname, '../scripts/transcribe.py');
-  
-  // Note: we wrap file path in quotes to handle whitespaces in filename
-  const cmd = `python "${scriptPath}" "${filePath}"`;
+    const audioUrl = `/assets/uploads/${audioFile.filename}`;
+    const coverUrl = '/assets/covers/anh_den_dem.jpg'; // Placeholder cover
 
-  exec(cmd, async (error, stdout, stderr) => {
-    if (error) {
-      console.error(`Transcription error: ${stderr || error.message}`);
-      // Fallback: insert song with empty lyrics if transcription fails
-      try {
-        const [result] = await pool.execute(`
-          INSERT INTO songs (title, artist_id, album_name, cover_url, audio_url, duration_seconds, lyrics_json)
-          VALUES (?, ?, ?, ?, ?, ?, ?)
-        `, [title, artist_id, album_name || 'Single', coverUrl, audioUrl, 180, '[]']);
-        
-        return res.status(201).json({ 
-          message: 'Song uploaded, but automatic transcription failed. Song inserted with default settings.',
-          songId: result.insertId,
-          audioUrl,
-          transcriptionError: stderr || error.message
-        });
-      } catch (dbError) {
-        return res.status(500).json({ message: 'Error inserting song after transcription failure', error: dbError.message });
-      }
-    }
+    // Insert song metadata and parsed lyrics JSON into DB
+    const [result] = await pool.execute(`
+      INSERT INTO songs (title, artist_id, album_name, cover_url, audio_url, duration_seconds, lyrics_json)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `, [title, artist_id, album_name || 'Single', coverUrl, audioUrl, durationSeconds, lyricsJsonStr]);
 
-    try {
-      // Parse JSON output from Python script
-      const data = JSON.parse(stdout.trim());
-      const durationSeconds = data.duration_seconds || 180;
-      const rawLyricsJson = data.lyrics_json || '[]';
+    // Clean up temporary lyrics file since it's already saved in DB
+    try { fs.unlinkSync(lyricsFile.path); } catch (e) {}
 
-      // Correct lyrics spelling using Gemini AI
-      const finalLyricsJson = await correctLyricsWithGemini(rawLyricsJson, title);
-
-      // Insert song details into database
-      const [result] = await pool.execute(`
-        INSERT INTO songs (title, artist_id, album_name, cover_url, audio_url, duration_seconds, lyrics_json)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-      `, [title, artist_id, album_name || 'Single', coverUrl, audioUrl, durationSeconds, finalLyricsJson]);
-
-      res.status(201).json({
-        message: 'Song uploaded and transcribed successfully!',
-        songId: result.insertId,
-        title,
-        durationSeconds,
-        lyricsJson: JSON.parse(finalLyricsJson),
-        audioUrl
-      });
-    } catch (parseError) {
-      console.error(`Parse error of transcription stdout: ${parseError.message}`);
-      try {
-        const [result] = await pool.execute(`
-          INSERT INTO songs (title, artist_id, album_name, cover_url, audio_url, duration_seconds, lyrics_json)
-          VALUES (?, ?, ?, ?, ?, ?, ?)
-        `, [title, artist_id, album_name || 'Single', coverUrl, audioUrl, 180, '[]']);
-
-        res.status(201).json({
-          message: 'Song uploaded, but error parsing transcription results.',
-          songId: result.insertId,
-          audioUrl
-        });
-      } catch (dbError) {
-        return res.status(500).json({ message: 'Error inserting song after parse failure', error: dbError.message });
-      }
-    }
-  });
+    res.status(201).json({
+      message: 'Song and lyrics uploaded and synchronized successfully!',
+      songId: result.insertId,
+      title,
+      durationSeconds,
+      lyricsJson,
+      audioUrl
+    });
+  } catch (error) {
+    console.error('Upload processing failed:', error.message);
+    // Cleanup files on error
+    try { fs.unlinkSync(audioFile.path); } catch (e) {}
+    try { fs.unlinkSync(lyricsFile.path); } catch (e) {}
+    res.status(500).json({ message: 'Internal server error during upload processing', error: error.message });
+  }
 };
 
 module.exports = {
