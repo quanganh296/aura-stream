@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const srcPng = path.join(__dirname, 'icon', 'icon.png');
+const srcPng = path.join(__dirname, 'icon', 'icon.ico');
 const destIco = path.join(__dirname, 'build', 'icon.ico');
 const destDir = path.join(__dirname, 'build');
 
@@ -10,7 +10,7 @@ if (!fs.existsSync(destDir)) {
 }
 
 if (!fs.existsSync(srcPng)) {
-  console.error('Source icon.png not found at:', srcPng);
+  console.error('Source icon.ico not found at:', srcPng);
   process.exit(1);
 }
 
