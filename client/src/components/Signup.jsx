@@ -8,6 +8,7 @@ const Signup = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -23,8 +24,13 @@ const Signup = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!username || !email || !password) {
+    if (!username || !email || !password || !confirmPassword) {
       setErrorMsg('Please fill in all fields.');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setErrorMsg('Mật khẩu xác nhận không khớp.');
       return;
     }
 
@@ -139,6 +145,23 @@ const Signup = () => {
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
+              </div>
+            </div>
+
+            {/* Confirm Password Input */}
+            <div className="form-group">
+              <label htmlFor="confirmPassword">Confirm Password</label>
+              <div className="input-wrapper">
+                <Lock className="input-icon" size={18} />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  id="confirmPassword"
+                  placeholder="••••••••"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  disabled={isSubmitting}
+                  required
+                />
               </div>
             </div>
 
