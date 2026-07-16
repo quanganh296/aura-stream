@@ -388,7 +388,7 @@ const Dashboard = () => {
             <div className="view-section animate-fade">
               {/* Featured Release Hero */}
               <div className="hero-banner">
-                <img src="/assets/concert_banner.png" alt="Concert Hero" className="hero-banner-img" />
+                <img src="./assets/concert_banner.png" alt="Concert Hero" className="hero-banner-img" />
                 <div className="hero-overlay"></div>
                 <div className="hero-banner-content">
                   <span className="badge-new">PHÁT HÀNH MỚI</span>

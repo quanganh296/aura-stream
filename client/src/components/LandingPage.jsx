@@ -51,7 +51,7 @@ const LandingPage = () => {
         </div>
         <div className="hero-visual">
           <div className="blob-glow"></div>
-          <img src="/assets/landing_hero.png" alt="Aura Soundwave Render" className="floating-img" />
+          <img src="./assets/landing_hero.png" alt="Aura Soundwave Render" className="floating-img" />
         </div>
       </header>
 

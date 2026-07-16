@@ -1,5 +1,24 @@
 const API_BASE_URL = 'http://localhost:5000/api';
 
+const adjustUrls = (obj) => {
+  if (!obj) return obj;
+  if (typeof obj === 'string') {
+    if (obj.startsWith('/assets/')) {
+      return '.' + obj;
+    }
+    return obj;
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(adjustUrls);
+  }
+  if (typeof obj === 'object') {
+    for (const key in obj) {
+      obj[key] = adjustUrls(obj[key]);
+    }
+  }
+  return obj;
+};
+
 const apiFetch = async (endpoint, options = {}) => {
   const token = localStorage.getItem('aura_token');
   const headers = {
@@ -18,7 +37,8 @@ const apiFetch = async (endpoint, options = {}) => {
     throw new Error(errorData.message || `API Error: ${response.status}`);
   }
 
-  return response.json();
+  const data = await response.json();
+  return adjustUrls(data);
 };
 
 export const authAPI = {
@@ -75,7 +95,8 @@ export const songAPI = {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.message || `API Error: ${response.status}`);
     }
-    return response.json();
+    const data = await response.json();
+    return adjustUrls(data);
   }
 };
 
