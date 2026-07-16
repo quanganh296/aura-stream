@@ -10,7 +10,7 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "electron:dev": "electron . --dev",
-    "electron:build": "npm run build && electron-builder && powershell -Command \"New-Item -ItemType Directory -Force -Path dist-desktop; Stop-Process -Name AuraStream -ErrorAction SilentlyContinue; Copy-Item -Path D:\\MyMusicApp\\aurastream-dist-desktop\\* -Destination dist-desktop -Recurse -Force\""
+    "electron:build": "npm run build && electron-builder && powershell -Command \"New-Item -ItemType Directory -Force -Path dist-desktop; Stop-Process -Name 'AuraStream*' -ErrorAction SilentlyContinue; Copy-Item -Path D:\\MyMusicApp\\aurastream-dist-desktop\\* -Destination dist-desktop -Recurse -Force\""
   },
   "dependencies": {
     "lucide-react": "^1.24.0",
