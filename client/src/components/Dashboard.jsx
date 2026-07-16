@@ -35,6 +35,7 @@ const Dashboard = () => {
   
   // Navigation states
   const [activeTab, setActiveTab] = useState('home'); // 'home', 'browse', 'library', 'liked'
+  const [librarySubTab, setLibrarySubTab] = useState('liked'); // 'liked', 'playlists', 'albums', 'artists'
   const [showFullPlayer, setShowFullPlayer] = useState(false);
 
   // Lyrics Manual Upload states
@@ -241,13 +242,9 @@ const Dashboard = () => {
               <span>Library</span>
             </div>
             <div 
-              className={`menu-item ${activeTab.startsWith('playlist-') ? 'active' : ''}`}
+              className={`menu-item ${activeTab === 'playlists' ? 'active' : ''}`}
               onClick={() => { 
-                if (playlists.length > 0) {
-                  setActiveTab(`playlist-${playlists[0].id}`);
-                } else {
-                  setActiveTab('library');
-                }
+                setActiveTab('playlists');
                 setShowFullPlayer(false); 
               }}
             >
@@ -332,10 +329,14 @@ const Dashboard = () => {
                 <Search size={18} />
               </button>
             )}
-            <button className="header-btn"><Bell size={18} /></button>
-            <button className="header-btn"><Settings size={18} /></button>
+            <button className="header-btn" onClick={() => { setActiveTab('profile'); setShowFullPlayer(false); }} title="Thông báo">
+              <Bell size={18} />
+            </button>
+            <button className="header-btn" onClick={() => { setActiveTab('profile'); setShowFullPlayer(false); }} title="Cài đặt">
+              <Settings size={18} />
+            </button>
             {user && (
-              <div className="user-profile">
+              <div className="user-profile clickable" onClick={() => { setActiveTab('profile'); setShowFullPlayer(false); }} title="Hồ sơ cá nhân">
                 {/* Profile image with no username text per mockup */}
                 <div className="avatar-circle-wrapper">
                   <img 
@@ -519,6 +520,15 @@ const Dashboard = () => {
               handleCreatePlaylist={handleCreatePlaylist}
               setActiveTab={setActiveTab}
               setShowUploadModal={setShowUploadModal}
+              activeSubTab={librarySubTab}
+              setActiveSubTab={setLibrarySubTab}
+            />
+          ) : activeTab === 'playlists' ? (
+            /* Dedicated Playlists Grid View */
+            <UserPlaylistsView 
+              playlists={playlists}
+              handleCreatePlaylist={handleCreatePlaylist}
+              setActiveTab={setActiveTab}
             />
           ) : activeTab === 'profile' ? (
             /* User Profile View */
@@ -1157,9 +1167,52 @@ const ArtistProfileView = ({ artistId, songs, trendingArtists, handlePlayCard, s
   );
 };
 
+// Sub-component for User Playlists View (Standalone tab)
+const UserPlaylistsView = ({ playlists, handleCreatePlaylist, setActiveTab }) => {
+  return (
+    <div className="library-page-view animate-fade">
+      <div className="library-layout-grid" style={{ gridTemplateColumns: '1fr' }}>
+        <div className="library-main-column">
+          <div className="library-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+            <h2>Danh sách phát của tôi</h2>
+            <button className="btn-add-music-toggle" onClick={handleCreatePlaylist}>+ Tạo Playlist mới</button>
+          </div>
+          
+          <div className="library-playlists-grid">
+            {playlists.map(p => (
+              <div 
+                key={p.id} 
+                className="playlist-grid-card glass-panel clickable-card"
+                onClick={() => setActiveTab(`playlist-${p.id}`)}
+              >
+                <div className="playlist-cover-fallback">
+                  <Music size={28} />
+                </div>
+                <h4>{p.name}</h4>
+                <p>{p.songs?.length || 0} bài hát</p>
+              </div>
+            ))}
+            
+            {/* Create Playlist Card */}
+            <div 
+              className="playlist-grid-card glass-panel create-card clickable-card"
+              onClick={handleCreatePlaylist}
+            >
+              <div className="playlist-cover-fallback create-fallback">
+                <Plus size={28} />
+              </div>
+              <h4>Tạo Playlist Mới</h4>
+              <p>Tạo danh sách phát cá nhân</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Sub-component for User Library View
-const UserLibraryView = ({ playlists, likedSongs, songs, trendingArtists, handlePlayCard, handleCreatePlaylist, setActiveTab, setShowUploadModal }) => {
-  const [activeSubTab, setActiveSubTab] = useState('liked'); // 'liked', 'playlists', 'albums', 'artists'
+const UserLibraryView = ({ playlists, likedSongs, songs, trendingArtists, handlePlayCard, handleCreatePlaylist, setActiveTab, setShowUploadModal, activeSubTab, setActiveSubTab }) => {
 
   const displaySongs = likedSongs.length > 0 ? likedSongs : songs.slice(0, 3);
 
@@ -1195,12 +1248,6 @@ const UserLibraryView = ({ playlists, likedSongs, songs, trendingArtists, handle
               Bài hát đã thích
             </button>
             <button 
-              className={`subtab-btn ${activeSubTab === 'playlists' ? 'active' : ''}`}
-              onClick={() => setActiveSubTab('playlists')}
-            >
-              Playlists
-            </button>
-            <button 
               className={`subtab-btn ${activeSubTab === 'albums' ? 'active' : ''}`}
               onClick={() => setActiveSubTab('albums')}
             >
@@ -1234,24 +1281,6 @@ const UserLibraryView = ({ playlists, likedSongs, songs, trendingArtists, handle
                     </div>
                     <span className="row-plays-count">{(4.2 - (idx * 0.7)).toFixed(1)}M lượt nghe</span>
                     <span className="row-duration">{s.duration_seconds ? `${Math.floor(s.duration_seconds/60)}:${s.duration_seconds%60 < 10 ? '0' : ''}${s.duration_seconds%60}` : '3:42'}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-            
-            {activeSubTab === 'playlists' && (
-              <div className="library-playlists-grid">
-                {playlists.map(p => (
-                  <div 
-                    key={p.id} 
-                    className="playlist-grid-card glass-panel clickable-card"
-                    onClick={() => setActiveTab(`playlist-${p.id}`)}
-                  >
-                    <div className="playlist-cover-fallback">
-                      <Music size={32} />
-                    </div>
-                    <h4>{p.name}</h4>
-                    <p>{p.is_private ? 'Riêng tư' : 'Công khai'}</p>
                   </div>
                 ))}
               </div>
