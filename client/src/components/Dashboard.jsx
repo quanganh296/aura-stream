@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Home, Compass, Library, Heart, Search, Bell, Settings, LogOut, 
   Play, Plus, Music, Check, User, ListMusic,
-  ChevronRight, Sliders
+  ChevronRight, Sliders, Megaphone
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useAudio } from '../context/AudioContext';
@@ -37,6 +37,12 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('home'); // 'home', 'browse', 'library', 'liked'
   const [librarySubTab, setLibrarySubTab] = useState('liked'); // 'liked', 'playlists', 'albums', 'artists'
   const [showFullPlayer, setShowFullPlayer] = useState(false);
+  const [showNotificationsDropdown, setShowNotificationsDropdown] = useState(false);
+
+  // Settings states (Lifting state)
+  const [volumeNormalization, setVolumeNormalization] = useState(true);
+  const [qualityLevel, setQualityLevel] = useState(3); // 0: DATA SAVER, 1: NORMAL, 2: HIGH, 3: ULTRA HD
+  const qualityLabels = ['DATA SAVER', 'NORMAL', 'HIGH', 'ULTRA HD (LOSSLESS)'];
 
   // Lyrics Manual Upload states
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -258,13 +264,6 @@ const Dashboard = () => {
               <Heart size={20} fill={activeTab === 'liked' ? 'currentColor' : 'none'} />
               <span>Liked Songs</span>
             </div>
-            <div 
-              className={`menu-item ${activeTab === 'profile' ? 'active' : ''}`}
-              onClick={() => { setActiveTab('profile'); setShowFullPlayer(false); }}
-            >
-              <User size={20} />
-              <span>Profile</span>
-            </div>
           </nav>
 
           <div className="sidebar-playlists">
@@ -329,14 +328,67 @@ const Dashboard = () => {
                 <Search size={18} />
               </button>
             )}
-            <button className="header-btn" onClick={() => { setActiveTab('profile'); setShowFullPlayer(false); }} title="Thông báo">
-              <Bell size={18} />
-            </button>
-            <button className="header-btn" onClick={() => { setActiveTab('profile'); setShowFullPlayer(false); }} title="Cài đặt">
+            <div className="notification-bell-container" style={{ position: 'relative' }}>
+              <button 
+                className={`header-btn ${showNotificationsDropdown ? 'active' : ''}`} 
+                onClick={() => {
+                  setShowNotificationsDropdown(!showNotificationsDropdown);
+                }} 
+                title="Thông báo"
+              >
+                <Bell size={18} />
+              </button>
+              
+              {showNotificationsDropdown && (
+                <div className="reminder-notifications-dropdown glass-panel animate-fade">
+                  <div className="reminder-notif-header">
+                    <h4>Thông báo</h4>
+                    <button className="btn-mark-read" onClick={() => setShowNotificationsDropdown(false)}>ĐÁNH DẤU ĐÃ ĐỌC</button>
+                  </div>
+                  
+                  {/* Promo Banner inside dropdown */}
+                  <div className="reminder-notif-promo">
+                    <span>Nghe nhạc chất lượng Lossless</span>
+                    <div className="promo-actions">
+                      <button className="btn-promo-action" onClick={() => { setShowNotificationsDropdown(false); setActiveTab('settings'); }}>Nghe ngay</button>
+                      <button className="btn-promo-close" onClick={() => setShowNotificationsDropdown(false)}>&times;</button>
+                    </div>
+                  </div>
+                  
+                  <div className="reminder-notif-list">
+                    <div className="reminder-notif-item">
+                      <div className="reminder-notif-icon-circle user-circle-bg">
+                        <User size={14} />
+                      </div>
+                      <div className="reminder-notif-text">
+                        <p>Playlist <strong>"Lofi Chill"</strong> của bạn có người theo dõi mới</p>
+                        <span className="reminder-notif-time">5 giờ trước</span>
+                      </div>
+                    </div>
+                    
+                    <div className="reminder-notif-item">
+                      <div className="reminder-notif-icon-circle megaphone-circle-bg">
+                        <Megaphone size={14} />
+                      </div>
+                      <div className="reminder-notif-text">
+                        <p>Cập nhật hệ thống: Trải nghiệm âm thanh <strong>Lossless</strong> đã sẵn sàng</p>
+                        <span className="reminder-notif-time">Hôm qua</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="reminder-notif-footer">
+                    <button className="btn-view-all-notifs" onClick={() => setShowNotificationsDropdown(false)}>Xem tất cả thông báo</button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <button className="header-btn" onClick={() => { setActiveTab('settings'); setShowFullPlayer(false); setShowNotificationsDropdown(false); }} title="Cài đặt">
               <Settings size={18} />
             </button>
             {user && (
-              <div className="user-profile clickable" onClick={() => { setActiveTab('profile'); setShowFullPlayer(false); }} title="Hồ sơ cá nhân">
+              <div className="user-profile clickable" onClick={() => { setActiveTab('profile'); setShowFullPlayer(false); setShowNotificationsDropdown(false); }} title="Hồ sơ cá nhân">
                 {/* Profile image with no username text per mockup */}
                 <div className="avatar-circle-wrapper">
                   <img 
@@ -536,6 +588,16 @@ const Dashboard = () => {
               user={user}
               recentlyPlayed={recentlyPlayed}
               handlePlayCard={handlePlayCard}
+            />
+          ) : activeTab === 'settings' ? (
+            /* Dedicated Settings View */
+            <UserSettingsView 
+              user={user}
+              volumeNormalization={volumeNormalization}
+              setVolumeNormalization={setVolumeNormalization}
+              qualityLevel={qualityLevel}
+              setQualityLevel={setQualityLevel}
+              qualityLabels={qualityLabels}
             />
           ) : activeTab.startsWith('artist-') ? (
             /* Artist Profile View */
@@ -826,57 +888,14 @@ const PlaylistDetailView = ({ playlistId, allSongs, handlePlayCard, handleLikeCl
 };
 
 // Sub-component for User Profile View
-const UserProfileView = ({ user, recentlyPlayed, handlePlayCard }) => {
-  const [volumeNormalization, setVolumeNormalization] = useState(true);
-  const [qualityLevel, setQualityLevel] = useState(3); // 0: DATA SAVER, 1: NORMAL, 2: HIGH, 3: ULTRA HD
-  
-  const qualityLabels = ['DATA SAVER', 'NORMAL', 'HIGH', 'ULTRA HD (LOSSLESS)'];
-  
+// Sub-component for User Settings View (Dedicated tab)
+const UserSettingsView = ({ user, volumeNormalization, setVolumeNormalization, qualityLevel, setQualityLevel, qualityLabels }) => {
   return (
     <div className="profile-page-view animate-fade">
-      {/* Hero Header */}
-      <div className="profile-hero-row">
-        <div className="profile-user-card glass-panel">
-          <div className="profile-avatar-box">
-            <img 
-              src={user?.avatar_url || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80"} 
-              alt="Avatar" 
-              className="profile-user-avatar" 
-            />
-          </div>
-          <div className="profile-user-info">
-            <span className="user-badge">PROFESSIONAL LISTENER</span>
-            <h2>{user?.username || 'Minh Tú'}</h2>
-            <div className="followers-stats">
-              <span><strong>1.2k</strong> Following</span>
-              <span className="dot-separator">&bull;</span>
-              <span><strong>4.8k</strong> Followers</span>
-            </div>
-          </div>
-          <div className="profile-wave-graphic">
-            <span className="wave-bar"></span>
-            <span className="wave-bar"></span>
-            <span className="wave-bar"></span>
-            <span className="wave-bar"></span>
-          </div>
-        </div>
-        
-        <div className="profile-premium-card glass-panel">
-          <div className="premium-header">
-            <h3>Aura Premium</h3>
-            <span className="premium-star-badge">★</span>
-          </div>
-          <p>Enjoy lossless audio & ad-free streaming.</p>
-          <div className="renewal-info">
-            <span className="renewal-label">NEXT RENEWAL</span>
-            <span className="renewal-date">Oct 24, 2026</span>
-          </div>
-          <button className="btn-manage-subscription">Manage Subscription</button>
-        </div>
-      </div>
+      <h2 className="view-title" style={{ marginBottom: '2rem' }}>Cài đặt hệ thống</h2>
       
-      {/* Settings and Quality Controls */}
       <div className="profile-settings-grid">
+        {/* Account Settings */}
         <div className="settings-card glass-panel">
           <div className="card-header-row">
             <User size={18} className="purple-icon" />
@@ -908,7 +927,8 @@ const UserProfileView = ({ user, recentlyPlayed, handlePlayCard }) => {
             </div>
           </div>
         </div>
-        
+
+        {/* Audio Quality settings */}
         <div className="settings-card glass-panel">
           <div className="card-header-row">
             <Sliders size={18} className="purple-icon" />
@@ -956,8 +976,71 @@ const UserProfileView = ({ user, recentlyPlayed, handlePlayCard }) => {
         </div>
       </div>
       
-      {/* History and Notifications Row */}
-      <div className="profile-recent-notifications-grid">
+      {/* Subscription Card */}
+      <div style={{ marginTop: '2.5rem', maxWidth: '600px' }}>
+        <div className="profile-premium-card glass-panel" style={{ width: '100%' }}>
+          <div className="premium-header">
+            <h3>Aura Premium</h3>
+            <span className="premium-star-badge">★</span>
+          </div>
+          <p>Enjoy lossless audio & ad-free streaming.</p>
+          <div className="renewal-info">
+            <span className="renewal-label">NEXT RENEWAL</span>
+            <span className="renewal-date">Oct 24, 2026</span>
+          </div>
+          <button className="btn-manage-subscription">Manage Subscription</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Sub-component for User Profile View
+const UserProfileView = ({ user, recentlyPlayed, handlePlayCard }) => {
+  return (
+    <div className="profile-page-view animate-fade">
+      {/* Hero Header */}
+      <div className="profile-hero-row">
+        <div className="profile-user-card glass-panel">
+          <div className="profile-avatar-box">
+            <img 
+              src={user?.avatar_url || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80"} 
+              alt="Avatar" 
+              className="profile-user-avatar" 
+            />
+          </div>
+          <div className="profile-user-info">
+            <span className="user-badge">PROFESSIONAL LISTENER</span>
+            <h2>{user?.username || 'Minh Tú'}</h2>
+            <div className="followers-stats">
+              <span><strong>1.2k</strong> Following</span>
+              <span className="dot-separator">&bull;</span>
+              <span><strong>4.8k</strong> Followers</span>
+            </div>
+          </div>
+          <div className="profile-wave-graphic">
+            <span className="wave-bar"></span>
+            <span className="wave-bar"></span>
+            <span className="wave-bar"></span>
+            <span className="wave-bar"></span>
+          </div>
+        </div>
+        
+        <div className="profile-premium-card glass-panel">
+          <div className="premium-header">
+            <h3>Aura Premium Status</h3>
+            <span className="premium-star-badge">★</span>
+          </div>
+          <p>Account level: Active</p>
+          <div className="renewal-info">
+            <span className="renewal-label">MEMBER SINCE</span>
+            <span className="renewal-date">Jan 12, 2025</span>
+          </div>
+        </div>
+      </div>
+      
+      {/* History Row */}
+      <div className="profile-recent-notifications-grid" style={{ gridTemplateColumns: '1fr' }}>
         <div className="recent-played-history-card glass-panel">
           <div className="card-header-row">
             <Music size={18} className="purple-icon" />
@@ -965,7 +1048,7 @@ const UserProfileView = ({ user, recentlyPlayed, handlePlayCard }) => {
             <span className="view-all-link">View All</span>
           </div>
           <div className="recent-played-small-list">
-            {recentlyPlayed.slice(0, 3).map(s => (
+            {recentlyPlayed.slice(0, 5).map(s => (
               <div key={s.id} className="recent-played-small-row clickable" onClick={() => handlePlayCard(s, recentlyPlayed)}>
                 <TrackImage src={s.cover_url} alt={s.title} className="recent-small-img" />
                 <div className="recent-small-meta">
@@ -978,34 +1061,6 @@ const UserProfileView = ({ user, recentlyPlayed, handlePlayCard }) => {
             {recentlyPlayed.length === 0 && (
               <p className="no-history-text">No recently played history available.</p>
             )}
-          </div>
-        </div>
-        
-        <div className="notifications-card glass-panel">
-          <div className="card-header-row">
-            <Bell size={18} className="purple-icon" />
-            <h4>Notifications</h4>
-          </div>
-          <div className="notifications-list">
-            <div className="notification-item">
-              <div className="notification-icon-wrapper music-bg">
-                <Music size={14} />
-              </div>
-              <div className="notification-content">
-                <p><strong>New Release from Nebulae</strong> The album "Quantum Drift" is out now!</p>
-                <span className="time-ago">2 HOURS AGO</span>
-              </div>
-            </div>
-            
-            <div className="notification-item">
-              <div className="notification-icon-wrapper friend-bg">
-                <User size={14} />
-              </div>
-              <div className="notification-content">
-                <p><strong>Friend Activity</strong> Kaelin started listening to your "Late Night" playlist.</p>
-                <span className="time-ago">1 DAY AGO</span>
-              </div>
-            </div>
           </div>
         </div>
       </div>
