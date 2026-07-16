@@ -123,8 +123,75 @@ const getUserProfile = async (req, res) => {
   }
 };
 
+// @desc    Update user profile (username, email, or password)
+// @route   PUT /api/auth/profile
+// @access  Private
+const updateUserProfile = async (req, res) => {
+  const { username, email, password } = req.body;
+  const userId = req.user.id;
+
+  try {
+    // Check if user exists
+    const [users] = await pool.execute('SELECT * FROM users WHERE id = ?', [userId]);
+    if (users.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    let query = 'UPDATE users SET ';
+    const params = [];
+    const updates = [];
+
+    if (username) {
+      // Check if username already taken by another user
+      const [existing] = await pool.execute('SELECT id FROM users WHERE username = ? AND id != ?', [username, userId]);
+      if (existing.length > 0) {
+        return res.status(400).json({ message: 'Username is already taken' });
+      }
+      updates.push('username = ?');
+      params.push(username);
+    }
+
+    if (email) {
+      // Check if email already taken
+      const [existing] = await pool.execute('SELECT id FROM users WHERE email = ? AND id != ?', [email, userId]);
+      if (existing.length > 0) {
+        return res.status(400).json({ message: 'Email is already taken' });
+      }
+      updates.push('email = ?');
+      params.push(email);
+    }
+
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      const passwordHash = await bcrypt.hash(password, salt);
+      updates.push('password_hash = ?');
+      params.push(passwordHash);
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ message: 'Nothing to update' });
+    }
+
+    query += updates.join(', ') + ' WHERE id = ?';
+    params.push(userId);
+
+    await pool.execute(query, params);
+
+    // Get updated user details
+    const [updatedUsers] = await pool.execute(
+      'SELECT id, username, email, avatar_url, created_at FROM users WHERE id = ?',
+      [userId]
+    );
+
+    res.json(updatedUsers[0]);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error updating profile', error: error.message });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
-  getUserProfile
+  getUserProfile,
+  updateUserProfile
 };

@@ -38,6 +38,10 @@ const Dashboard = () => {
   const [librarySubTab, setLibrarySubTab] = useState('liked'); // 'liked', 'playlists', 'albums', 'artists'
   const [showFullPlayer, setShowFullPlayer] = useState(false);
   const [showNotificationsDropdown, setShowNotificationsDropdown] = useState(false);
+  
+  // Custom Playlist creation states
+  const [showCreatePlaylistModal, setShowCreatePlaylistModal] = useState(false);
+  const [newPlaylistName, setNewPlaylistName] = useState('');
 
   // Settings states (Lifting state)
   const [volumeNormalization, setVolumeNormalization] = useState(true);
@@ -134,15 +138,9 @@ const Dashboard = () => {
     return () => clearTimeout(delayDebounceFn);
   }, [searchQuery]);
 
-  const handleCreatePlaylist = async () => {
-    const name = prompt('Nhập tên Playlist mới:');
-    if (!name) return;
-    try {
-      const newPlaylist = await playlistAPI.create(name);
-      setPlaylists([...playlists, newPlaylist]);
-    } catch (err) {
-      console.error('Error creating playlist:', err);
-    }
+  const handleCreatePlaylist = () => {
+    setNewPlaylistName('');
+    setShowCreatePlaylistModal(true);
   };
 
   const handleUploadSubmit = async (e) => {
@@ -384,7 +382,7 @@ const Dashboard = () => {
               )}
             </div>
 
-            <button className="header-btn" onClick={() => { setActiveTab('settings'); setShowFullPlayer(false); setShowNotificationsDropdown(false); }} title="Cài đặt">
+            <button className="header-btn" onClick={() => { setActiveTab('profile'); setShowFullPlayer(false); setShowNotificationsDropdown(false); }} title="Cài đặt">
               <Settings size={18} />
             </button>
             {user && (
@@ -588,11 +586,6 @@ const Dashboard = () => {
               user={user}
               recentlyPlayed={recentlyPlayed}
               handlePlayCard={handlePlayCard}
-            />
-          ) : activeTab === 'settings' ? (
-            /* Dedicated Settings View */
-            <UserSettingsView 
-              user={user}
               volumeNormalization={volumeNormalization}
               setVolumeNormalization={setVolumeNormalization}
               qualityLevel={qualityLevel}
@@ -660,6 +653,42 @@ const Dashboard = () => {
         showFullPlayer={showFullPlayer} 
         setShowFullPlayer={setShowFullPlayer} 
       />
+
+      {/* Create Playlist Modal */}
+      {showCreatePlaylistModal && (
+        <div className="upload-modal-overlay" style={{ zIndex: 10000 }}>
+          <div className="upload-modal-container glass-panel animate-fade" style={{ maxWidth: '400px' }}>
+            <div className="upload-modal-header">
+              <h3>Tạo Playlist Mới</h3>
+              <button className="btn-close-modal" onClick={() => setShowCreatePlaylistModal(false)}>&times;</button>
+            </div>
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              if (!newPlaylistName.trim()) return;
+              try {
+                const newPlaylist = await playlistAPI.create(newPlaylistName.trim());
+                setPlaylists([...playlists, newPlaylist]);
+                setShowCreatePlaylistModal(false);
+              } catch (err) {
+                console.error('Error creating playlist:', err);
+              }
+            }} className="upload-form">
+              <div className="form-group">
+                <label>Tên Playlist</label>
+                <input 
+                  type="text" 
+                  required 
+                  placeholder="Nhập tên playlist của bạn..."
+                  value={newPlaylistName}
+                  onChange={(e) => setNewPlaylistName(e.target.value)}
+                  autoFocus
+                />
+              </div>
+              <button type="submit" className="btn-upload-submit">Tạo Playlist</button>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Song & Lyrics Upload Modal */}
       {showUploadModal && (
@@ -888,21 +917,139 @@ const PlaylistDetailView = ({ playlistId, allSongs, handlePlayCard, handleLikeCl
 };
 
 // Sub-component for User Profile View
-// Sub-component for User Settings View (Dedicated tab)
-const UserSettingsView = ({ user, volumeNormalization, setVolumeNormalization, qualityLevel, setQualityLevel, qualityLabels }) => {
+// Sub-component for User Profile View
+const UserProfileView = ({ user, recentlyPlayed, handlePlayCard, volumeNormalization, setVolumeNormalization, qualityLevel, setQualityLevel, qualityLabels }) => {
+  const { updateUser } = useAuth();
+  
+  // Edit states
+  const [showEditEmail, setShowEditEmail] = useState(false);
+  const [showEditName, setShowEditName] = useState(false);
+  const [showEditPassword, setShowEditPassword] = useState(false);
+  
+  const [newEmail, setNewEmail] = useState('');
+  const [newName, setNewName] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  
+  const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleUpdateEmail = async (e) => {
+    e.preventDefault();
+    if (!newEmail.trim()) return;
+    setIsSubmitting(true);
+    setErrorMsg('');
+    setSuccessMsg('');
+    try {
+      await updateUser({ email: newEmail.trim() });
+      setSuccessMsg('Đã cập nhật email thành công!');
+      setTimeout(() => {
+        setShowEditEmail(false);
+        setSuccessMsg('');
+      }, 1500);
+    } catch (err) {
+      setErrorMsg(err.message || 'Cập nhật thất bại.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleUpdateName = async (e) => {
+    e.preventDefault();
+    if (!newName.trim()) return;
+    setIsSubmitting(true);
+    setErrorMsg('');
+    setSuccessMsg('');
+    try {
+      await updateUser({ username: newName.trim() });
+      setSuccessMsg('Đã cập nhật tên hiển thị thành công!');
+      setTimeout(() => {
+        setShowEditName(false);
+        setSuccessMsg('');
+      }, 1500);
+    } catch (err) {
+      setErrorMsg(err.message || 'Cập nhật thất bại.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleUpdatePassword = async (e) => {
+    e.preventDefault();
+    if (newPassword.length < 6) {
+      setErrorMsg('Mật khẩu mới phải từ 6 ký tự trở lên.');
+      return;
+    }
+    setIsSubmitting(true);
+    setErrorMsg('');
+    setSuccessMsg('');
+    try {
+      await updateUser({ password: newPassword });
+      setSuccessMsg('Đã đổi mật khẩu thành công!');
+      setNewPassword('');
+      setTimeout(() => {
+        setShowEditPassword(false);
+        setSuccessMsg('');
+      }, 1500);
+    } catch (err) {
+      setErrorMsg(err.message || 'Cập nhật thất bại.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="profile-page-view animate-fade">
-      <h2 className="view-title" style={{ marginBottom: '2rem' }}>Cài đặt hệ thống</h2>
-      
-      <div className="profile-settings-grid">
+      {/* Hero Header */}
+      <div className="profile-hero-row">
+        <div className="profile-user-card glass-panel">
+          <div className="profile-avatar-box">
+            <img 
+              src={user?.avatar_url || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80"} 
+              alt="Avatar" 
+              className="profile-user-avatar" 
+            />
+          </div>
+          <div className="profile-user-info">
+            <span className="user-badge">PROFESSIONAL LISTENER</span>
+            <h2>{user?.username || 'Minh Tú'}</h2>
+            <div className="followers-stats">
+              <span><strong>1.2k</strong> Following</span>
+              <span className="dot-separator">&bull;</span>
+              <span><strong>4.8k</strong> Followers</span>
+            </div>
+          </div>
+          <div className="profile-wave-graphic">
+            <span className="wave-bar"></span>
+            <span className="wave-bar"></span>
+            <span className="wave-bar"></span>
+            <span className="wave-bar"></span>
+          </div>
+        </div>
+        
+        <div className="profile-premium-card glass-panel">
+          <div className="premium-header">
+            <h3>Aura Premium Status</h3>
+            <span className="premium-star-badge">★</span>
+          </div>
+          <p>Account level: Active</p>
+          <div className="renewal-info">
+            <span className="renewal-label">MEMBER SINCE</span>
+            <span className="renewal-date">Jan 12, 2025</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Settings Grid (Merged back) */}
+      <div className="profile-settings-grid" style={{ marginTop: '2rem' }}>
         {/* Account Settings */}
         <div className="settings-card glass-panel">
           <div className="card-header-row">
             <User size={18} className="purple-icon" />
-            <h4>Account Settings</h4>
+            <h4>Account Settings (Click to Edit)</h4>
           </div>
           <div className="settings-list">
-            <div className="settings-item clickable">
+            <div className="settings-item clickable" onClick={() => { setNewEmail(user?.email || ''); setShowEditEmail(true); }}>
               <div className="item-meta">
                 <span className="item-label">Email Address</span>
                 <span className="item-value">{user?.email || 'minhtu.music@aurastream.com'}</span>
@@ -910,7 +1057,7 @@ const UserSettingsView = ({ user, volumeNormalization, setVolumeNormalization, q
               <ChevronRight size={16} />
             </div>
             
-            <div className="settings-item clickable">
+            <div className="settings-item clickable" onClick={() => { setNewName(user?.username || ''); setShowEditName(true); }}>
               <div className="item-meta">
                 <span className="item-label">Display Name</span>
                 <span className="item-value">{user?.username || 'Minh Tú'}</span>
@@ -918,17 +1065,17 @@ const UserSettingsView = ({ user, volumeNormalization, setVolumeNormalization, q
               <ChevronRight size={16} />
             </div>
             
-            <div className="settings-item clickable">
+            <div className="settings-item clickable" onClick={() => { setNewPassword(''); setShowEditPassword(true); }}>
               <div className="item-meta">
                 <span className="item-label">Privacy & Security</span>
-                <span className="item-value">Two-factor authentication enabled</span>
+                <span className="item-value">Change Password / Security Controls</span>
               </div>
               <ChevronRight size={16} />
             </div>
           </div>
         </div>
 
-        {/* Audio Quality settings */}
+        {/* Audio Quality Settings */}
         <div className="settings-card glass-panel">
           <div className="card-header-row">
             <Sliders size={18} className="purple-icon" />
@@ -976,71 +1123,8 @@ const UserSettingsView = ({ user, volumeNormalization, setVolumeNormalization, q
         </div>
       </div>
       
-      {/* Subscription Card */}
-      <div style={{ marginTop: '2.5rem', maxWidth: '600px' }}>
-        <div className="profile-premium-card glass-panel" style={{ width: '100%' }}>
-          <div className="premium-header">
-            <h3>Aura Premium</h3>
-            <span className="premium-star-badge">★</span>
-          </div>
-          <p>Enjoy lossless audio & ad-free streaming.</p>
-          <div className="renewal-info">
-            <span className="renewal-label">NEXT RENEWAL</span>
-            <span className="renewal-date">Oct 24, 2026</span>
-          </div>
-          <button className="btn-manage-subscription">Manage Subscription</button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Sub-component for User Profile View
-const UserProfileView = ({ user, recentlyPlayed, handlePlayCard }) => {
-  return (
-    <div className="profile-page-view animate-fade">
-      {/* Hero Header */}
-      <div className="profile-hero-row">
-        <div className="profile-user-card glass-panel">
-          <div className="profile-avatar-box">
-            <img 
-              src={user?.avatar_url || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80"} 
-              alt="Avatar" 
-              className="profile-user-avatar" 
-            />
-          </div>
-          <div className="profile-user-info">
-            <span className="user-badge">PROFESSIONAL LISTENER</span>
-            <h2>{user?.username || 'Minh Tú'}</h2>
-            <div className="followers-stats">
-              <span><strong>1.2k</strong> Following</span>
-              <span className="dot-separator">&bull;</span>
-              <span><strong>4.8k</strong> Followers</span>
-            </div>
-          </div>
-          <div className="profile-wave-graphic">
-            <span className="wave-bar"></span>
-            <span className="wave-bar"></span>
-            <span className="wave-bar"></span>
-            <span className="wave-bar"></span>
-          </div>
-        </div>
-        
-        <div className="profile-premium-card glass-panel">
-          <div className="premium-header">
-            <h3>Aura Premium Status</h3>
-            <span className="premium-star-badge">★</span>
-          </div>
-          <p>Account level: Active</p>
-          <div className="renewal-info">
-            <span className="renewal-label">MEMBER SINCE</span>
-            <span className="renewal-date">Jan 12, 2025</span>
-          </div>
-        </div>
-      </div>
-      
       {/* History Row */}
-      <div className="profile-recent-notifications-grid" style={{ gridTemplateColumns: '1fr' }}>
+      <div className="profile-recent-notifications-grid" style={{ gridTemplateColumns: '1fr', marginTop: '2rem' }}>
         <div className="recent-played-history-card glass-panel">
           <div className="card-header-row">
             <Music size={18} className="purple-icon" />
@@ -1064,6 +1148,90 @@ const UserProfileView = ({ user, recentlyPlayed, handlePlayCard }) => {
           </div>
         </div>
       </div>
+
+      {/* Edit Email Modal */}
+      {showEditEmail && (
+        <div className="upload-modal-overlay" style={{ zIndex: 10000 }}>
+          <div className="upload-modal-container glass-panel animate-fade" style={{ maxWidth: '400px' }}>
+            <div className="upload-modal-header">
+              <h3>Đổi Địa Chỉ Email</h3>
+              <button className="btn-close-modal" onClick={() => { setShowEditEmail(false); setErrorMsg(''); setSuccessMsg(''); }}>&times;</button>
+            </div>
+            <form onSubmit={handleUpdateEmail} className="upload-form">
+              {errorMsg && <p className="auth-error-alert" style={{ fontSize: '0.8rem', padding: '8px', marginBottom: '10px' }}>{errorMsg}</p>}
+              {successMsg && <p style={{ color: '#22c55e', fontSize: '0.85rem', marginBottom: '10px' }}>{successMsg}</p>}
+              <div className="form-group">
+                <label>Email mới</label>
+                <input 
+                  type="email" 
+                  required 
+                  placeholder="name@example.com"
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                  disabled={isSubmitting}
+                />
+              </div>
+              <button type="submit" className="btn-upload-submit" disabled={isSubmitting}>Lưu email</button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Name Modal */}
+      {showEditName && (
+        <div className="upload-modal-overlay" style={{ zIndex: 10000 }}>
+          <div className="upload-modal-container glass-panel animate-fade" style={{ maxWidth: '400px' }}>
+            <div className="upload-modal-header">
+              <h3>Đổi Tên Hiển Thị</h3>
+              <button className="btn-close-modal" onClick={() => { setShowEditName(false); setErrorMsg(''); setSuccessMsg(''); }}>&times;</button>
+            </div>
+            <form onSubmit={handleUpdateName} className="upload-form">
+              {errorMsg && <p className="auth-error-alert" style={{ fontSize: '0.8rem', padding: '8px', marginBottom: '10px' }}>{errorMsg}</p>}
+              {successMsg && <p style={{ color: '#22c55e', fontSize: '0.85rem', marginBottom: '10px' }}>{successMsg}</p>}
+              <div className="form-group">
+                <label>Tên hiển thị mới</label>
+                <input 
+                  type="text" 
+                  required 
+                  placeholder="Nhập tên mới..."
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  disabled={isSubmitting}
+                />
+              </div>
+              <button type="submit" className="btn-upload-submit" disabled={isSubmitting}>Lưu tên</button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Password Modal */}
+      {showEditPassword && (
+        <div className="upload-modal-overlay" style={{ zIndex: 10000 }}>
+          <div className="upload-modal-container glass-panel animate-fade" style={{ maxWidth: '400px' }}>
+            <div className="upload-modal-header">
+              <h3>Đổi Mật Khẩu</h3>
+              <button className="btn-close-modal" onClick={() => { setShowEditPassword(false); setErrorMsg(''); setSuccessMsg(''); }}>&times;</button>
+            </div>
+            <form onSubmit={handleUpdatePassword} className="upload-form">
+              {errorMsg && <p className="auth-error-alert" style={{ fontSize: '0.8rem', padding: '8px', marginBottom: '10px' }}>{errorMsg}</p>}
+              {successMsg && <p style={{ color: '#22c55e', fontSize: '0.85rem', marginBottom: '10px' }}>{successMsg}</p>}
+              <div className="form-group">
+                <label>Mật khẩu mới (tối thiểu 6 ký tự)</label>
+                <input 
+                  type="password" 
+                  required 
+                  placeholder="Nhập mật khẩu mới..."
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  disabled={isSubmitting}
+                />
+              </div>
+              <button type="submit" className="btn-upload-submit" disabled={isSubmitting}>Đổi mật khẩu</button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -1318,60 +1486,77 @@ const UserLibraryView = ({ playlists, likedSongs, songs, trendingArtists, handle
           
           <div className="library-subtab-content">
             {activeSubTab === 'liked' && (
-              <div className="liked-songs-sub-list">
-                <div className="table-header-row">
-                  <span className="col-num">#</span>
-                  <span className="col-title">TIÊU ĐỀ</span>
-                  <span className="col-plays">LƯỢT NGHE</span>
-                  <span className="col-time">🕒</span>
+              likedSongs.length === 0 ? (
+                <div className="empty-panel glass-panel" style={{ padding: '2.5rem', textAlign: 'center', width: '100%' }}>
+                  <Heart size={32} className="empty-icon text-red" style={{ margin: '0 auto 10px auto', display: 'block' }} />
+                  <p>Chưa có bài hát đã thích. Thả tim các bài hát để thêm vào đây.</p>
                 </div>
-                
-                {displaySongs.map((s, idx) => (
-                  <div key={s.id} className="search-result-row clickable" onClick={() => handlePlayCard(s, displaySongs)}>
-                    <span className="row-number">{idx + 1}</span>
-                    <TrackImage src={s.cover_url} alt={s.title} className="search-row-img" />
-                    <div className="search-row-meta">
-                      <h4>{s.title}</h4>
-                      <p>{s.artist_name}</p>
+              ) : (
+                <div className="liked-songs-sub-list">
+                  <div className="table-header-row">
+                    <span className="col-num">#</span>
+                    <span className="col-title">TIÊU ĐỀ</span>
+                    <span className="col-plays">LƯỢT NGHE</span>
+                    <span className="col-time">🕒</span>
+                  </div>
+                  
+                  {likedSongs.map((s, idx) => (
+                    <div key={s.id} className="search-result-row clickable" onClick={() => handlePlayCard(s, likedSongs)}>
+                      <span className="row-number">{idx + 1}</span>
+                      <TrackImage src={s.cover_url} alt={s.title} className="search-row-img" />
+                      <div className="search-row-meta">
+                        <h4>{s.title}</h4>
+                        <p>{s.artist_name}</p>
+                      </div>
+                      <span className="row-plays-count">{(4.2 - (idx * 0.7)).toFixed(1)}M lượt nghe</span>
+                      <span className="row-duration">{s.duration_seconds ? `${Math.floor(s.duration_seconds/60)}:${s.duration_seconds%60 < 10 ? '0' : ''}${s.duration_seconds%60}` : '3:42'}</span>
                     </div>
-                    <span className="row-plays-count">{(4.2 - (idx * 0.7)).toFixed(1)}M lượt nghe</span>
-                    <span className="row-duration">{s.duration_seconds ? `${Math.floor(s.duration_seconds/60)}:${s.duration_seconds%60 < 10 ? '0' : ''}${s.duration_seconds%60}` : '3:42'}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {activeSubTab === 'albums' && (
-              <div className="library-playlists-grid">
-                <div className="playlist-grid-card glass-panel">
-                  <div className="playlist-cover-fallback">
-                    <Music size={32} />
-                  </div>
-                  <h4>Tâm 9</h4>
-                  <p>Mỹ Tâm &bull; Album</p>
+                  ))}
                 </div>
-                <div className="playlist-grid-card glass-panel">
-                  <div className="playlist-cover-fallback">
-                    <Music size={32} />
-                  </div>
-                  <h4>Một Vạn Năm</h4>
-                  <p>Vũ. &bull; Album</p>
-                </div>
-              </div>
+              )
             )}
+            
+            {activeSubTab === 'albums' && (() => {
+              const albums = Array.from(new Set(songs.map(s => s.album_name ? JSON.stringify({ name: s.album_name, artist: s.artist_name, cover_url: s.cover_url }) : null).filter(Boolean))).map(str => JSON.parse(str));
+              return albums.length === 0 ? (
+                <div className="empty-panel glass-panel" style={{ padding: '2.5rem', textAlign: 'center', width: '100%' }}>
+                  <Music size={32} className="empty-icon" style={{ margin: '0 auto 10px auto', display: 'block' }} />
+                  <p>Chưa có album nào.</p>
+                </div>
+              ) : (
+                <div className="library-playlists-grid">
+                  {albums.map((album, idx) => (
+                    <div key={idx} className="playlist-grid-card glass-panel">
+                      <div className="playlist-cover-fallback">
+                        <TrackImage src={album.cover_url} alt={album.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      </div>
+                      <h4>{album.name}</h4>
+                      <p>{album.artist} &bull; Album</p>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
 
             {activeSubTab === 'artists' && (
-              <div className="artist-fans-grid">
-                {trendingArtists.slice(0, 3).map(a => (
-                  <div key={a.id} className="artist-fan-circle-card clickable-card" onClick={() => setActiveTab(`artist-${a.id}`)}>
-                    <div className="fan-circle-avatar-wrapper">
-                      <img src={a.avatar_url || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80"} alt={a.name} className="fan-circle-avatar" />
+              trendingArtists.length === 0 ? (
+                <div className="empty-panel glass-panel" style={{ padding: '2.5rem', textAlign: 'center', width: '100%' }}>
+                  <User size={32} className="empty-icon" style={{ margin: '0 auto 10px auto', display: 'block' }} />
+                  <p>Chưa có nghệ sĩ nào.</p>
+                </div>
+              ) : (
+                <div className="artist-fans-grid">
+                  {trendingArtists.slice(0, 6).map(a => (
+                    <div key={a.id} className="artist-fan-circle-card clickable-card" onClick={() => setActiveTab(`artist-${a.id}`)}>
+                      <div className="fan-circle-avatar-wrapper">
+                        <img src={a.avatar_url || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80"} alt={a.name} className="fan-circle-avatar" />
+                      </div>
+                      <h4>{a.name}</h4>
+                      <p>NGHỆ SĨ</p>
                     </div>
-                    <h4>{a.name}</h4>
-                    <p>NGHỆ SĨ</p>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )
             )}
           </div>
 

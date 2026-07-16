@@ -66,6 +66,11 @@ export const authAPI = {
 
   getProfile: () => apiFetch('/auth/profile'),
   
+  updateProfile: (userData) => apiFetch('/auth/profile', {
+    method: 'PUT',
+    body: JSON.stringify(userData)
+  }),
+  
   logout: () => {
     localStorage.removeItem('aura_token');
   }
