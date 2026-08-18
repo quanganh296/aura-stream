@@ -640,8 +640,8 @@ const Dashboard = () => {
               handleCreatePlaylist={handleCreatePlaylist}
               setActiveTab={setActiveTab}
             />
-          ) : activeTab === 'profile' ? (
-            /* User Profile View */
+          ) : activeTab === 'profile' || activeTab === 'settings' ? (
+            /* User Profile & Settings View */
             <UserProfileView 
               user={user}
               recentlyPlayed={recentlyPlayed}
@@ -651,6 +651,7 @@ const Dashboard = () => {
               qualityLevel={qualityLevel}
               setQualityLevel={setQualityLevel}
               qualityLabels={qualityLabels}
+              setShowLogoutModal={setShowLogoutModal}
             />
           ) : activeTab.startsWith('artist-') ? (
             /* Artist Profile View */
@@ -704,7 +705,14 @@ const Dashboard = () => {
               handleLikeClick={handleLikeClick}
               likedSongIds={likedSongIds}
             />
-          ) : null}
+          ) : (
+            <DiscoverView 
+              songs={songs}
+              trendingArtists={trendingArtists}
+              handlePlayCard={handlePlayCard}
+              setActiveTab={setActiveTab}
+            />
+          )}
         </div>
       </main>
 
@@ -1183,8 +1191,7 @@ const PlaylistDetailView = ({ playlistId, allSongs, handlePlayCard, handleLikeCl
 };
 
 // Sub-component for User Profile View
-// Sub-component for User Profile View
-const UserProfileView = ({ user, recentlyPlayed, handlePlayCard, volumeNormalization, setVolumeNormalization, qualityLevel, setQualityLevel, qualityLabels }) => {
+const UserProfileView = ({ user, recentlyPlayed, handlePlayCard, volumeNormalization, setVolumeNormalization, qualityLevel, setQualityLevel, qualityLabels, setShowLogoutModal }) => {
   const { updateUser } = useAuth();
   
   // Edit states
@@ -1242,8 +1249,8 @@ const UserProfileView = ({ user, recentlyPlayed, handlePlayCard, volumeNormaliza
 
   const handleUpdatePassword = async (e) => {
     e.preventDefault();
-    if (newPassword.length < 6) {
-      setErrorMsg('Mật khẩu mới phải từ 6 ký tự trở lên.');
+    if (!newPassword || newPassword.length < 6) {
+      setErrorMsg('Mật khẩu mới phải từ 6 ký tự.');
       return;
     }
     setIsSubmitting(true);
@@ -1338,6 +1345,16 @@ const UserProfileView = ({ user, recentlyPlayed, handlePlayCard, volumeNormaliza
               </div>
               <ChevronRight size={16} />
             </div>
+
+            {setShowLogoutModal && (
+              <div className="settings-item clickable" onClick={() => setShowLogoutModal(true)} style={{ borderTop: '1px solid rgba(239, 68, 68, 0.2)', marginTop: '8px', paddingTop: '12px' }}>
+                <div className="item-meta">
+                  <span className="item-label" style={{ color: '#ef4444', fontWeight: '700' }}>Đăng xuất tài khoản</span>
+                  <span className="item-value" style={{ color: '#f87171' }}>Thoát khỏi phiên làm việc hiện tại</span>
+                </div>
+                <LogOut size={16} color="#ef4444" />
+              </div>
+            )}
           </div>
         </div>
 

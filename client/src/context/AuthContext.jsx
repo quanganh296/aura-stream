@@ -111,7 +111,13 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    authAPI.logout();
+    localStorage.removeItem('aura_token');
+    sessionStorage.clear();
+    try {
+      authAPI.logout();
+    } catch (e) {
+      console.warn('API logout warning:', e);
+    }
     setUser(null);
   };
 
