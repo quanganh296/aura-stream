@@ -1,5 +1,7 @@
 const express = require('express');
 const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
 require('dotenv').config();
 
 const authRoutes = require('./routes/authRoutes');
@@ -8,24 +10,40 @@ const playlistRoutes = require('./routes/playlistRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const HOST = '0.0.0.0';
+
+// Global error safety handlers to prevent unhandled crashes
+process.on('uncaughtException', (err) => {
+  console.error('CRITICAL: Uncaught Exception in process:', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('CRITICAL: Unhandled Rejection at:', promise, 'reason:', reason);
+});
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
-// Base health check route
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'UP', message: 'Aura Stream API is fully functional' });
-});
+// Health Check Endpoints for Railway & Docker containers
+const healthCheckHandler = (req, res) => {
+  res.status(200).json({
+    status: 'UP',
+    message: 'Aura Stream API is fully functional',
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString()
+  });
+};
 
-// Routes
+app.get('/health', healthCheckHandler);
+app.get('/api/health', healthCheckHandler);
+
+// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/songs', songRoutes);
 app.use('/api/playlists', playlistRoutes);
 
 // Serve static assets in production if client build exists
-const fs = require('fs');
-const path = require('path');
 const clientDistPath = path.join(__dirname, '../client/dist');
 if (fs.existsSync(clientDistPath)) {
   app.use(express.static(clientDistPath));
@@ -33,6 +51,9 @@ if (fs.existsSync(clientDistPath)) {
     if (req.originalUrl.startsWith('/api')) return next();
     res.sendFile(path.join(clientDistPath, 'index.html'));
   });
+} else {
+  // If client dist doesn't exist, handle root route as health status
+  app.get('/', healthCheckHandler);
 }
 
 // 404 Route handler
@@ -50,6 +71,24 @@ app.use((err, req, res, next) => {
 });
 
 // Start Server
-app.listen(PORT, () => {
-  console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+const server = app.listen(PORT, HOST, () => {
+  console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on http://${HOST}:${PORT}`);
 });
+
+// Graceful Shutdown handling for Railway / Docker SIGTERM & SIGINT
+const shutdown = (signal) => {
+  console.log(`Received ${signal}. Shutting down server gracefully...`);
+  server.close(() => {
+    console.log('HTTP server closed.');
+    process.exit(0);
+  });
+  
+  // Force exit after 10s timeout if connections remain open
+  setTimeout(() => {
+    console.error('Could not close connections in time, forcefully shutting down');
+    process.exit(1);
+  }, 10000);
+};
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
