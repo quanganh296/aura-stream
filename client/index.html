@@ -6,9 +6,72 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Aura Stream - Experience high-fidelity 8D music streaming, personalized emotional playlists, and synchronized lyrics scrolling. Curating soundtracks for your life." />
     <title>Aura Stream - Sound Without Limits</title>
+
+    <!-- 1. Google Fonts Preconnect (High-priority DNS & TLS Handshake) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- 2. Preload Google Fonts Stylesheet -->
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" />
+
+    <!-- Non-render-blocking font stylesheet loading -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" media="print" onload="this.media='all'" />
+    <noscript>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" />
+    </noscript>
+
+    <!-- 3. Critical Inline CSS for Instantaneous First Paint (0ms FCP) -->
+    <style>
+      :root {
+        --bg-primary: #060913;
+        --bg-secondary: #0d111d;
+        --accent-purple: #a855f7;
+        --text-primary: #f3f4f6;
+        --font-main: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      }
+      *, *::before, *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: var(--font-main);
+        -webkit-font-smoothing: antialiased;
+      }
+      html, body {
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
+        overflow-x: hidden;
+        min-height: 100vh;
+        width: 100%;
+      }
+      #root {
+        min-height: 100vh;
+      }
+      /* Pre-render Loading Skeleton */
+      .app-initial-skeleton {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        background: #060913;
+      }
+      .app-skeleton-logo {
+        font-size: 2.2rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #a855f7, #ec4899);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        letter-spacing: 1px;
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+    <div id="root">
+      <div className="app-initial-skeleton">
+        <h1 className="app-skeleton-logo">AURA STREAM</h1>
+      </div>
+    </div>
+    <!-- Defer main script execution to prevent main-thread blocking during DOM construction -->
+    <script type="module" src="/src/main.jsx" defer></script>
   </body>
 </html>
