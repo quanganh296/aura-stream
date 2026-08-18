@@ -23,6 +23,18 @@ app.use('/api/auth', authRoutes);
 app.use('/api/songs', songRoutes);
 app.use('/api/playlists', playlistRoutes);
 
+// Serve static assets in production if client build exists
+const fs = require('fs');
+const path = require('path');
+const clientDistPath = path.join(__dirname, '../client/dist');
+if (fs.existsSync(clientDistPath)) {
+  app.use(express.static(clientDistPath));
+  app.get('*', (req, res, next) => {
+    if (req.originalUrl.startsWith('/api')) return next();
+    res.sendFile(path.join(clientDistPath, 'index.html'));
+  });
+}
+
 // 404 Route handler
 app.use((req, res, next) => {
   res.status(404).json({ message: `Route not found - ${req.originalUrl}` });
