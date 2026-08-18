@@ -15,6 +15,14 @@ import FullPlayer from './FullPlayer';
 import LogoutModal from './LogoutModal';
 import '../styles/Dashboard.css';
 
+const defaultArtists = [
+  { id: 1, name: 'Sơn Tùng M-TP', followers: '14.2M Người nghe hàng tháng', avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80', bio: 'Vietnamese singer-songwriter and V-Pop sensation.' },
+  { id: 2, name: 'Đen Vâu', followers: '8.5M Người nghe hàng tháng', avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80', bio: 'Poetic rap maestro and rustic lyricist.' },
+  { id: 3, name: 'Billie Eilish', followers: '68.1M Người nghe hàng tháng', avatar_url: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=300&q=80', bio: 'Global pop innovator and Grammy-winning artist.' },
+  { id: 4, name: 'The Weeknd', followers: '105.4M Người nghe hàng tháng', avatar_url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80', bio: 'R&B legend and sonic visionary.' },
+  { id: 5, name: 'tlinh', followers: '4.8M Người nghe hàng tháng', avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80', bio: 'Leading V-hiphop female artist.' }
+];
+
 const Dashboard = () => {
   const { user, loading, logout } = useAuth();
   const { 
@@ -86,10 +94,10 @@ const Dashboard = () => {
 
   // Automatically update default upload artist when artists list changes
   useEffect(() => {
-    if (Array.isArray(trendingArtists) && trendingArtists.length > 0) {
-      setUploadArtistId(trendingArtists[0].id);
+    if (Array.isArray(popularArtists) && popularArtists.length > 0) {
+      setUploadArtistId(popularArtists[0].id);
     }
-  }, [trendingArtists]);
+  }, [popularArtists]);
 
   // Handle logout confirmation & navigation
   const handleConfirmLogout = () => {
@@ -130,7 +138,11 @@ const Dashboard = () => {
       setSongs(Array.isArray(allSongs) ? allSongs : []);
 
       const artists = await songAPI.getTrendingArtists().catch(() => []);
-      setTrendingArtists(Array.isArray(artists) ? artists : []);
+      if (Array.isArray(artists) && artists.length > 0) {
+        setPopularArtists(artists);
+      } else {
+        setPopularArtists(defaultArtists);
+      }
 
       const items = await songAPI.getMixes().catch(() => []);
       setMixes(Array.isArray(items) ? items : []);
@@ -633,7 +645,7 @@ const Dashboard = () => {
                   <h3>Nghệ Sĩ Thịnh Hành</h3>
                 </div>
                 <div className="artists-scroll-container">
-                  {(trendingArtists || []).map(artist => (
+                  {(popularArtists.length > 0 ? popularArtists : defaultArtists).map(artist => (
                     <div 
                       key={artist.id} 
                       className="artist-card" 
@@ -653,7 +665,7 @@ const Dashboard = () => {
             /* Redesigned Discover View matching mockup */
             <DiscoverView 
               songs={songs}
-              trendingArtists={trendingArtists}
+              popularArtists={popularArtists}
               handlePlayCard={handlePlayCard}
               setActiveTab={setActiveTab}
             />
@@ -663,7 +675,7 @@ const Dashboard = () => {
               playlists={playlists}
               likedSongs={likedSongs}
               songs={songs}
-              trendingArtists={trendingArtists}
+              popularArtists={popularArtists}
               handlePlayCard={handlePlayCard}
               handleCreatePlaylist={handleCreatePlaylist}
               setActiveTab={setActiveTab}
@@ -696,7 +708,7 @@ const Dashboard = () => {
             <ArtistProfileView 
               artistId={activeTab.split('-')[1]}
               songs={songs}
-              trendingArtists={trendingArtists}
+              popularArtists={popularArtists}
               handlePlayCard={handlePlayCard}
               setActiveTab={setActiveTab}
             />
@@ -746,7 +758,7 @@ const Dashboard = () => {
           ) : (
             <DiscoverView 
               songs={songs}
-              trendingArtists={trendingArtists}
+              popularArtists={popularArtists}
               handlePlayCard={handlePlayCard}
               setActiveTab={setActiveTab}
             />
@@ -833,7 +845,7 @@ const Dashboard = () => {
                     value={uploadArtistId} 
                     onChange={(e) => setUploadArtistId(Number(e.target.value))}
                   >
-                    {(Array.isArray(trendingArtists) ? trendingArtists : []).map(a => (
+                    {(Array.isArray(popularArtists) ? popularArtists : defaultArtists).map(a => (
                       <option key={a.id} value={a.id}>{a.name}</option>
                     ))}
                   </select>
@@ -884,9 +896,9 @@ const Dashboard = () => {
 };
 
 // Sub-component for Redesigned Discover View
-const DiscoverView = ({ songs = [], trendingArtists = [], handlePlayCard, setActiveTab }) => {
+const DiscoverView = ({ songs = [], popularArtists = defaultArtists, handlePlayCard, setActiveTab }) => {
   const safeSongs = Array.isArray(songs) ? songs : [];
-  const safeArtists = Array.isArray(trendingArtists) ? trendingArtists : [];
+  const safeArtists = Array.isArray(popularArtists) && popularArtists.length > 0 ? popularArtists : defaultArtists;
 
   const trendingList = safeSongs.length >= 3 ? safeSongs.slice(0, 3) : [
     { id: 1, title: 'Neon Dreams', artist_name: 'Cyber Architect', album_name: 'Echoes of Time', duration_seconds: 222, cover_url: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?auto=format&fit=crop&w=400&q=80' },
@@ -1561,14 +1573,14 @@ const UserProfileView = ({ user, recentlyPlayed, handlePlayCard, volumeNormaliza
 };
 
 // Sub-component for Artist Profile View
-const ArtistProfileView = ({ artistId, songs = [], trendingArtists = [], handlePlayCard, setActiveTab }) => {
+const ArtistProfileView = ({ artistId, songs = [], popularArtists = defaultArtists, handlePlayCard, setActiveTab }) => {
   const [artist, setArtist] = useState(null);
   const [artistSongs, setArtistSongs] = useState([]);
   const [isFollowing, setIsFollowing] = useState(false);
 
   useEffect(() => {
     const safeSongs = Array.isArray(songs) ? songs : [];
-    const safeArtists = Array.isArray(trendingArtists) ? trendingArtists : [];
+    const safeArtists = Array.isArray(popularArtists) && popularArtists.length > 0 ? popularArtists : defaultArtists;
     const id = parseInt(artistId);
     const foundArtist = safeArtists.find(a => a.id === id);
     if (foundArtist) {
@@ -1584,7 +1596,7 @@ const ArtistProfileView = ({ artistId, songs = [], trendingArtists = [], handleP
 
     const filteredSongs = safeSongs.filter(s => s.artist_id === id);
     setArtistSongs(filteredSongs);
-  }, [artistId, songs, trendingArtists]);
+  }, [artistId, songs, popularArtists]);
 
   const formatListeners = (id) => {
     const counts = {
@@ -1767,7 +1779,7 @@ const UserLibraryView = ({
   playlists = [], 
   likedSongs = [], 
   songs = [], 
-  trendingArtists = [], 
+  popularArtists = defaultArtists, 
   handlePlayCard, 
   handleCreatePlaylist, 
   setActiveTab, 
@@ -1777,7 +1789,7 @@ const UserLibraryView = ({
 }) => {
   const safeLiked = Array.isArray(likedSongs) ? likedSongs : [];
   const safeSongs = Array.isArray(songs) ? songs : [];
-  const safeArtists = Array.isArray(trendingArtists) ? trendingArtists : [];
+  const safeArtists = Array.isArray(popularArtists) && popularArtists.length > 0 ? popularArtists : defaultArtists;
   const displaySongs = safeLiked.length > 0 ? safeLiked : safeSongs.slice(0, 3);
 
   return (
