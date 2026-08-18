@@ -17,13 +17,6 @@ const Login = () => {
   const { login, socialLogin, user, loading } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect if already logged in
-  useEffect(() => {
-    if (!loading && user) {
-      navigate('/home', { replace: true });
-    }
-  }, [user, loading, navigate]);
-
   const handleSocialAuth = async (provider, customData = {}) => {
     setIsSubmitting(true);
     setErrorMsg('');

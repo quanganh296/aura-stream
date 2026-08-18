@@ -18,12 +18,6 @@ const Signup = () => {
   const { register, socialLogin, user, loading } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!loading && user) {
-      navigate('/home', { replace: true });
-    }
-  }, [user, loading, navigate]);
-
   const handleSocialAuth = async (provider, customData = {}) => {
     setIsSubmitting(true);
     setErrorMsg('');
