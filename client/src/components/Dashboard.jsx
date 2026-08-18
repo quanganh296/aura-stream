@@ -25,6 +25,7 @@ const Dashboard = () => {
 
   // Component states
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [songs, setSongs] = useState([]);
   const [trendingArtists, setTrendingArtists] = useState([]);
   const [recentlyPlayed, setRecentlyPlayed] = useState([]);
@@ -384,19 +385,83 @@ const Dashboard = () => {
               )}
             </div>
 
-            <button className="header-btn" onClick={() => { setActiveTab('profile'); setShowFullPlayer(false); setShowNotificationsDropdown(false); }} title="Cài đặt">
+            <button className="header-btn" onClick={() => { setActiveTab('settings'); setShowFullPlayer(false); setShowNotificationsDropdown(false); setShowUserDropdown(false); }} title="Cài đặt">
               <Settings size={18} />
             </button>
             {user && (
-              <div className="user-profile clickable" onClick={() => { setActiveTab('profile'); setShowFullPlayer(false); setShowNotificationsDropdown(false); }} title="Hồ sơ cá nhân">
-                {/* Profile image with no username text per mockup */}
-                <div className="avatar-circle-wrapper">
-                  <img 
-                    src={user.avatar_url || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80"} 
-                    alt="Avatar" 
-                    className="user-profile-avatar-img" 
-                  />
+              <div className="user-profile-container" style={{ position: 'relative' }}>
+                <div 
+                  className="user-profile clickable" 
+                  onClick={() => {
+                    setShowUserDropdown(!showUserDropdown);
+                    setShowNotificationsDropdown(false);
+                  }} 
+                  title="Tài khoản cá nhân"
+                >
+                  <div className="avatar-circle-wrapper">
+                    <img 
+                      src={user.avatar_url || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80"} 
+                      alt="Avatar" 
+                      className="user-profile-avatar-img" 
+                    />
+                  </div>
                 </div>
+
+                {showUserDropdown && (
+                  <div className="user-header-dropdown glass-panel animate-fade">
+                    <div className="dropdown-user-header">
+                      <div className="dropdown-avatar-circle">
+                        <img 
+                          src={user.avatar_url || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80"} 
+                          alt="Avatar" 
+                        />
+                      </div>
+                      <div className="dropdown-user-details">
+                        <span className="dropdown-username">{user.username || 'User'}</span>
+                        <span className="dropdown-email">{user.email || 'user@aurastream.com'}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="dropdown-divider"></div>
+
+                    <button 
+                      className="dropdown-item" 
+                      onClick={() => {
+                        setShowUserDropdown(false);
+                        setActiveTab('profile');
+                        setShowFullPlayer(false);
+                      }}
+                    >
+                      <User size={16} />
+                      <span>Hồ sơ cá nhân</span>
+                    </button>
+
+                    <button 
+                      className="dropdown-item" 
+                      onClick={() => {
+                        setShowUserDropdown(false);
+                        setActiveTab('settings');
+                        setShowFullPlayer(false);
+                      }}
+                    >
+                      <Settings size={16} />
+                      <span>Cài đặt</span>
+                    </button>
+
+                    <div className="dropdown-divider"></div>
+
+                    <button 
+                      className="dropdown-item text-danger" 
+                      onClick={() => {
+                        setShowUserDropdown(false);
+                        setShowLogoutModal(true);
+                      }}
+                    >
+                      <LogOut size={16} />
+                      <span>Đăng xuất</span>
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
