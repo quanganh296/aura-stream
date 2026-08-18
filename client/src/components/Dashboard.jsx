@@ -603,11 +603,11 @@ const Dashboard = () => {
                   <button className="btn-section-action-plus" title="Thêm gợi ý"><Plus size={18} /></button>
                 </div>
                 <div className="mixes-grid">
-                  {mixes.map(mix => (
+                  {(mixes || []).map(mix => (
                     <div 
                       key={mix.id} 
                       className="mix-card glass-panel clickable-card"
-                      onClick={() => handlePlayCard(mix.songs[0], mix.songs)}
+                      onClick={() => mix.songs?.length > 0 && handlePlayCard(mix.songs[0], mix.songs)}
                     >
                       <div className="mix-header-box">
                         <div className="mix-glow-bg"></div>
@@ -631,7 +631,7 @@ const Dashboard = () => {
                   <h3>Nghệ Sĩ Thịnh Hành</h3>
                 </div>
                 <div className="artists-scroll-container">
-                  {trendingArtists.map(artist => (
+                  {(trendingArtists || []).map(artist => (
                     <div 
                       key={artist.id} 
                       className="artist-card" 
@@ -882,8 +882,11 @@ const Dashboard = () => {
 };
 
 // Sub-component for Redesigned Discover View
-const DiscoverView = ({ songs, trendingArtists, handlePlayCard, setActiveTab }) => {
-  const trendingList = songs.length >= 3 ? songs.slice(0, 3) : [
+const DiscoverView = ({ songs = [], trendingArtists = [], handlePlayCard, setActiveTab }) => {
+  const safeSongs = Array.isArray(songs) ? songs : [];
+  const safeArtists = Array.isArray(trendingArtists) ? trendingArtists : [];
+
+  const trendingList = safeSongs.length >= 3 ? safeSongs.slice(0, 3) : [
     { id: 1, title: 'Neon Dreams', artist_name: 'Cyber Architect', album_name: 'Echoes of Time', duration_seconds: 222, cover_url: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?auto=format&fit=crop&w=400&q=80' },
     { id: 2, title: 'Midnight Horizon', artist_name: 'Luna Sol', album_name: 'Dust & Gold', duration_seconds: 255, cover_url: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=400&q=80' },
     { id: 3, title: 'Street Static', artist_name: 'The Verse King', album_name: 'Concrete Jungle', duration_seconds: 178, cover_url: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=400&q=80' },
@@ -910,7 +913,7 @@ const DiscoverView = ({ songs, trendingArtists, handlePlayCard, setActiveTab }) 
               Your personal sonic journey updated every Monday. Dive into fresh tracks tailored specifically for your rhythm.
             </p>
             <div className="banner-actions">
-              <button className="btn-banner-play" onClick={() => songs.length > 0 && handlePlayCard(songs[0], songs)}>
+              <button className="btn-banner-play" onClick={() => safeSongs.length > 0 && handlePlayCard(safeSongs[0], safeSongs)}>
                 <Play size={18} fill="currentColor" /> Play Now
               </button>
               <button className="btn-banner-save">Save to Library</button>
@@ -986,7 +989,7 @@ const DiscoverView = ({ songs, trendingArtists, handlePlayCard, setActiveTab }) 
 
             <div className="trending-global-list">
               {trendingList.map((s, idx) => (
-                <div key={s.id || idx} className="trending-global-row clickable" onClick={() => handlePlayCard(s, songs)}>
+                <div key={s.id || idx} className="trending-global-row clickable" onClick={() => handlePlayCard(s, safeSongs)}>
                   <span className="trending-num">0{idx + 1}</span>
                   <TrackImage src={s.cover_url} alt={s.title} className="trending-row-img" />
                   <div className="trending-row-meta">
@@ -1007,7 +1010,7 @@ const DiscoverView = ({ songs, trendingArtists, handlePlayCard, setActiveTab }) 
             </div>
 
             <div className="artists-for-you-list">
-              {(trendingArtists.length > 0 ? trendingArtists.slice(0, 3) : [
+              {(safeArtists.length > 0 ? safeArtists.slice(0, 3) : [
                 { id: 101, name: 'Elara Vance', followers: '4.2M Monthly Listeners', avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80' },
                 { id: 102, name: 'Ghost Frequency', followers: '1.8M Monthly Listeners', avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80' },
                 { id: 103, name: 'The Alchemists', followers: '950K Monthly Listeners', avatar_url: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=200&q=80' },
@@ -1556,26 +1559,28 @@ const UserProfileView = ({ user, recentlyPlayed, handlePlayCard, volumeNormaliza
 };
 
 // Sub-component for Artist Profile View
-const ArtistProfileView = ({ artistId, songs, trendingArtists, handlePlayCard, setActiveTab }) => {
+const ArtistProfileView = ({ artistId, songs = [], trendingArtists = [], handlePlayCard, setActiveTab }) => {
   const [artist, setArtist] = useState(null);
   const [artistSongs, setArtistSongs] = useState([]);
   const [isFollowing, setIsFollowing] = useState(false);
 
   useEffect(() => {
+    const safeSongs = Array.isArray(songs) ? songs : [];
+    const safeArtists = Array.isArray(trendingArtists) ? trendingArtists : [];
     const id = parseInt(artistId);
-    const foundArtist = trendingArtists.find(a => a.id === id);
+    const foundArtist = safeArtists.find(a => a.id === id);
     if (foundArtist) {
       setArtist(foundArtist);
     } else {
       setArtist({
-        id: id,
+        id: id || 1,
         name: 'Mỹ Tâm',
-        avatar_url: '/assets/artists/hoang_thuy_linh.jpg',
+        avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
         bio: 'Một trong những giọng ca xuất sắc hàng đầu của nền âm nhạc Việt Nam.'
       });
     }
 
-    const filteredSongs = songs.filter(s => s.artist_id === id);
+    const filteredSongs = safeSongs.filter(s => s.artist_id === id);
     setArtistSongs(filteredSongs);
   }, [artistId, songs, trendingArtists]);
 
@@ -1693,7 +1698,7 @@ const ArtistProfileView = ({ artistId, songs, trendingArtists, handlePlayCard, s
             <h3>Người hâm mộ cũng thích</h3>
           </div>
           <div className="artist-fans-grid">
-            {trendingArtists.slice(0, 4).map(a => (
+            {safeArtists.slice(0, 4).map(a => (
               <div key={a.id} className="artist-fan-circle-card clickable-card" onClick={() => setActiveTab(`artist-${a.id}`)}>
                 <div className="fan-circle-avatar-wrapper">
                   <img src={a.avatar_url || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80"} alt={a.name} className="fan-circle-avatar" />
