@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "postinstall": "cd server && npm install && cd ../client && npm install",
+    "postinstall": "cd server && npm install --omit=dev && cd ../client && npm install --include=dev",
     "build": "cd client && npm run build",
     "start": "cd server && npm start"
   },
