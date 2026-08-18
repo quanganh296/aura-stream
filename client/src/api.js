@@ -1,4 +1,15 @@
-const API_BASE_URL = 'http://localhost:5000/api';
+const getApiBaseUrl = () => {
+  if (typeof window !== 'undefined') {
+    // If running on production / Railway domain (not localhost)
+    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+      return `${window.location.origin}/api`;
+    }
+  }
+  // Local development fallback to port 8080 or relative /api
+  return 'http://localhost:8080/api';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 const adjustUrls = (obj) => {
   if (!obj) return obj;
@@ -100,7 +111,7 @@ export const songAPI = {
   }),
   upload: async (formData) => {
     const token = localStorage.getItem('aura_token');
-    const response = await fetch('http://localhost:5000/api/songs/upload', {
+    const response = await fetch(`${API_BASE_URL}/songs/upload`, {
       method: 'POST',
       headers: {
         ...(token ? { 'Authorization': `Bearer ${token}` } : {})
