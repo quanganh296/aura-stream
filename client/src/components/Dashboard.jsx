@@ -1657,7 +1657,9 @@ const ArtistProfileView = ({ artistId, songs, trendingArtists, handlePlayCard, s
 };
 
 // Sub-component for User Playlists View (Standalone tab)
-const UserPlaylistsView = ({ playlists, handleCreatePlaylist, setActiveTab }) => {
+const UserPlaylistsView = ({ playlists = [], handleCreatePlaylist, setActiveTab }) => {
+  const safePlaylists = Array.isArray(playlists) ? playlists : [];
+
   return (
     <div className="library-page-view animate-fade">
       <div className="library-layout-grid" style={{ gridTemplateColumns: '1fr' }}>
@@ -1668,7 +1670,7 @@ const UserPlaylistsView = ({ playlists, handleCreatePlaylist, setActiveTab }) =>
           </div>
           
           <div className="library-playlists-grid">
-            {playlists.map(p => (
+            {safePlaylists.map(p => (
               <div 
                 key={p.id} 
                 className="playlist-grid-card glass-panel clickable-card"
@@ -1701,9 +1703,22 @@ const UserPlaylistsView = ({ playlists, handleCreatePlaylist, setActiveTab }) =>
 };
 
 // Sub-component for User Library View
-const UserLibraryView = ({ playlists, likedSongs, songs, trendingArtists, handlePlayCard, handleCreatePlaylist, setActiveTab, setShowUploadModal, activeSubTab, setActiveSubTab }) => {
-
-  const displaySongs = likedSongs.length > 0 ? likedSongs : songs.slice(0, 3);
+const UserLibraryView = ({ 
+  playlists = [], 
+  likedSongs = [], 
+  songs = [], 
+  trendingArtists = [], 
+  handlePlayCard, 
+  handleCreatePlaylist, 
+  setActiveTab, 
+  setShowUploadModal, 
+  activeSubTab = 'liked', 
+  setActiveSubTab 
+}) => {
+  const safeLiked = Array.isArray(likedSongs) ? likedSongs : [];
+  const safeSongs = Array.isArray(songs) ? songs : [];
+  const safeArtists = Array.isArray(trendingArtists) ? trendingArtists : [];
+  const displaySongs = safeLiked.length > 0 ? safeLiked : safeSongs.slice(0, 3);
 
   return (
     <div className="library-page-view animate-fade">
@@ -1722,7 +1737,7 @@ const UserLibraryView = ({ playlists, likedSongs, songs, trendingArtists, handle
                   <Play size={20} fill="currentColor" style={{ transform: 'translateX(1px)' }} />
                 </button>
                 <div className="stats-txt">
-                  <span className="song-count">{likedSongs.length} bài hát</span>
+                  <span className="song-count">{safeLiked.length} bài hát</span>
                   <span className="update-time">Cập nhật 2 giờ trước</span>
                 </div>
               </div>
@@ -1752,7 +1767,7 @@ const UserLibraryView = ({ playlists, likedSongs, songs, trendingArtists, handle
           
           <div className="library-subtab-content">
             {activeSubTab === 'liked' && (
-              likedSongs.length === 0 ? (
+              safeLiked.length === 0 ? (
                 <div className="empty-panel glass-panel" style={{ padding: '2.5rem', textAlign: 'center', width: '100%' }}>
                   <Heart size={32} className="empty-icon text-red" style={{ margin: '0 auto 10px auto', display: 'block' }} />
                   <p>Chưa có bài hát đã thích. Thả tim các bài hát để thêm vào đây.</p>
@@ -1766,8 +1781,8 @@ const UserLibraryView = ({ playlists, likedSongs, songs, trendingArtists, handle
                     <span className="col-time">🕒</span>
                   </div>
                   
-                  {likedSongs.map((s, idx) => (
-                    <div key={s.id} className="search-result-row clickable" onClick={() => handlePlayCard(s, likedSongs)}>
+                  {safeLiked.map((s, idx) => (
+                    <div key={s.id} className="search-result-row clickable" onClick={() => handlePlayCard(s, safeLiked)}>
                       <span className="row-number">{idx + 1}</span>
                       <TrackImage src={s.cover_url} alt={s.title} className="search-row-img" />
                       <div className="search-row-meta">
@@ -1783,7 +1798,7 @@ const UserLibraryView = ({ playlists, likedSongs, songs, trendingArtists, handle
             )}
             
             {activeSubTab === 'albums' && (() => {
-              const albums = Array.from(new Set(songs.map(s => s.album_name ? JSON.stringify({ name: s.album_name, artist: s.artist_name, cover_url: s.cover_url }) : null).filter(Boolean))).map(str => JSON.parse(str));
+              const albums = Array.from(new Set(safeSongs.map(s => s.album_name ? JSON.stringify({ name: s.album_name, artist: s.artist_name, cover_url: s.cover_url }) : null).filter(Boolean))).map(str => JSON.parse(str));
               return albums.length === 0 ? (
                 <div className="empty-panel glass-panel" style={{ padding: '2.5rem', textAlign: 'center', width: '100%' }}>
                   <Music size={32} className="empty-icon" style={{ margin: '0 auto 10px auto', display: 'block' }} />
@@ -1805,14 +1820,14 @@ const UserLibraryView = ({ playlists, likedSongs, songs, trendingArtists, handle
             })()}
 
             {activeSubTab === 'artists' && (
-              trendingArtists.length === 0 ? (
+              safeArtists.length === 0 ? (
                 <div className="empty-panel glass-panel" style={{ padding: '2.5rem', textAlign: 'center', width: '100%' }}>
                   <User size={32} className="empty-icon" style={{ margin: '0 auto 10px auto', display: 'block' }} />
                   <p>Chưa có nghệ sĩ nào.</p>
                 </div>
               ) : (
                 <div className="artist-fans-grid">
-                  {trendingArtists.slice(0, 6).map(a => (
+                  {safeArtists.slice(0, 6).map(a => (
                     <div key={a.id} className="artist-fan-circle-card clickable-card" onClick={() => setActiveTab(`artist-${a.id}`)}>
                       <div className="fan-circle-avatar-wrapper">
                         <img src={a.avatar_url || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80"} alt={a.name} className="fan-circle-avatar" />
@@ -1829,7 +1844,7 @@ const UserLibraryView = ({ playlists, likedSongs, songs, trendingArtists, handle
           <div className="library-artists-suggestion">
             <h3 className="section-title">Nghệ sĩ bạn có thể thích</h3>
             <div className="artists-scroll-container">
-              {trendingArtists.map(artist => (
+              {safeArtists.map(artist => (
                 <div 
                   key={artist.id} 
                   className="artist-card" 
