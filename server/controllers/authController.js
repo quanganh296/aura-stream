@@ -5,9 +5,10 @@ require('dotenv').config();
 
 // Helper to generate token
 const generateToken = (user) => {
+  const secretKey = process.env.JWT_SECRET || 'aura_stream_fallback_super_secret_jwt_key_2025';
   return jwt.sign(
     { id: user.id, username: user.username, email: user.email },
-    process.env.JWT_SECRET,
+    secretKey,
     { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
   );
 };
