@@ -64,6 +64,17 @@ export const authAPI = {
     return data;
   },
 
+  socialLogin: async (socialPayload) => {
+    const data = await apiFetch('/auth/social-login', {
+      method: 'POST',
+      body: JSON.stringify(socialPayload)
+    });
+    if (data.token) {
+      localStorage.setItem('aura_token', data.token);
+    }
+    return data;
+  },
+
   getProfile: () => apiFetch('/auth/profile'),
   
   updateProfile: (userData) => apiFetch('/auth/profile', {

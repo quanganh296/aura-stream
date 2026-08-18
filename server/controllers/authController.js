@@ -189,9 +189,85 @@ const updateUserProfile = async (req, res) => {
   }
 };
 
+// @desc    Authenticate or register user via Social Provider (Google, Facebook, Twitch, Apple, X)
+// @route   POST /api/auth/social-login
+// @access  Public
+const socialLogin = async (req, res) => {
+  const { provider, email, name, avatar_url } = req.body;
+
+  if (!provider || !email) {
+    return res.status(400).json({ message: 'Social login requires provider and email' });
+  }
+
+  try {
+    // 1. Check if user exists by email
+    const [existingUsers] = await pool.execute(
+      'SELECT * FROM users WHERE email = ?',
+      [email]
+    );
+
+    let user;
+
+    if (existingUsers.length > 0) {
+      user = existingUsers[0];
+      // Update avatar if provided and not set
+      if (avatar_url && !user.avatar_url) {
+        await pool.execute('UPDATE users SET avatar_url = ? WHERE id = ?', [avatar_url, user.id]);
+        user.avatar_url = avatar_url;
+      }
+    } else {
+      // 2. Create new social user
+      let baseUsername = name ? name.toLowerCase().replace(/[^a-z0-9]/g, '') : email.split('@')[0];
+      if (!baseUsername) baseUsername = 'user';
+      let username = baseUsername;
+      
+      // Ensure unique username
+      const [userMatches] = await pool.execute(
+        'SELECT id FROM users WHERE username = ?',
+        [username]
+      );
+      if (userMatches.length > 0) {
+        username = `${baseUsername}_${Math.floor(1000 + Math.random() * 9000)}`;
+      }
+
+      // Generate dummy password hash for social accounts
+      const salt = await bcrypt.genSalt(10);
+      const randomPasswordHash = await bcrypt.hash(`social_${provider}_${Date.now()}`, salt);
+
+      const [result] = await pool.execute(
+        'INSERT INTO users (username, email, password_hash, avatar_url) VALUES (?, ?, ?, ?)',
+        [username, email, randomPasswordHash, avatar_url || null]
+      );
+
+      user = {
+        id: result.insertId,
+        username,
+        email,
+        avatar_url: avatar_url || null
+      };
+    }
+
+    // 3. Issue JWT token
+    const token = generateToken(user);
+
+    res.status(200).json({
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      avatar_url: user.avatar_url,
+      provider,
+      token
+    });
+  } catch (error) {
+    console.error('Social Login Error:', error);
+    res.status(500).json({ message: 'Server error during social authentication', error: error.message });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
   getUserProfile,
-  updateUserProfile
+  updateUserProfile,
+  socialLogin
 };

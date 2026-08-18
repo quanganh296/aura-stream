@@ -60,6 +60,37 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const socialLogin = async (provider, customData = {}) => {
+    setError(null);
+    try {
+      const mockProfiles = {
+        google: { email: 'user.google@aurastream.com', name: 'Google User', avatar_url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80' },
+        facebook: { email: 'user.fb@aurastream.com', name: 'Facebook User', avatar_url: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=200&q=80' },
+        apple: { email: 'user.apple@aurastream.com', name: 'Apple User', avatar_url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80' },
+        x: { email: 'user.x@aurastream.com', name: 'X User', avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80' },
+        twitch: { email: 'user.twitch@aurastream.com', name: 'Twitch Streamer', avatar_url: 'https://images.unsplash.com/photo-1566492031773-4f4e44671857?auto=format&fit=crop&w=200&q=80' },
+      };
+
+      const payload = {
+        provider,
+        ...(mockProfiles[provider.toLowerCase()] || {}),
+        ...customData
+      };
+
+      const data = await authAPI.socialLogin(payload);
+      setUser({
+        id: data.id,
+        username: data.username,
+        email: data.email,
+        avatar_url: data.avatar_url
+      });
+      return data;
+    } catch (err) {
+      setError(err.message || 'Social login failed');
+      throw err;
+    }
+  };
+
   const logout = () => {
     authAPI.logout();
     setUser(null);
@@ -81,7 +112,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, error, login, register, logout, setError, updateUser }}>
+    <AuthContext.Provider value={{ user, loading, error, login, register, socialLogin, logout, setError, updateUser }}>
       {children}
     </AuthContext.Provider>
   );
