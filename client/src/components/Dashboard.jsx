@@ -86,7 +86,7 @@ const Dashboard = () => {
 
   // Automatically update default upload artist when artists list changes
   useEffect(() => {
-    if (trendingArtists.length > 0) {
+    if (Array.isArray(trendingArtists) && trendingArtists.length > 0) {
       setUploadArtistId(trendingArtists[0].id);
     }
   }, [trendingArtists]);
@@ -127,16 +127,16 @@ const Dashboard = () => {
   const fetchDashboardData = async () => {
     try {
       const allSongs = await songAPI.getAll();
-      setSongs(allSongs);
+      setSongs(Array.isArray(allSongs) ? allSongs : []);
 
       const artists = await songAPI.getTrendingArtists();
-      setTrendingArtists(artists);
+      setTrendingArtists(Array.isArray(artists) ? artists : []);
 
       const items = await songAPI.getMixes();
-      setMixes(items);
+      setMixes(Array.isArray(items) ? items : []);
 
       const userPlaylists = await playlistAPI.getAll();
-      setPlaylists(userPlaylists);
+      setPlaylists(Array.isArray(userPlaylists) ? userPlaylists : []);
 
       refreshHistory();
       refreshLikedSongs();
@@ -148,18 +148,20 @@ const Dashboard = () => {
   const refreshHistory = async () => {
     try {
       const history = await songAPI.getHistory();
-      setRecentlyPlayed(history);
+      setRecentlyPlayed(Array.isArray(history) ? history : []);
     } catch (err) {
-      console.error('Error fetching history:', err);
+      console.warn('Error fetching history:', err.message);
+      setRecentlyPlayed([]);
     }
   };
 
   const refreshLikedSongs = async () => {
     try {
       const liked = await playlistAPI.getLikedSongs();
-      setLikedSongs(liked);
+      setLikedSongs(Array.isArray(liked) ? liked : []);
     } catch (err) {
-      console.error('Error fetching liked songs list:', err);
+      console.warn('Error fetching liked songs list:', err.message);
+      setLikedSongs([]);
     }
   };
 
@@ -831,7 +833,7 @@ const Dashboard = () => {
                     value={uploadArtistId} 
                     onChange={(e) => setUploadArtistId(Number(e.target.value))}
                   >
-                    {trendingArtists.map(a => (
+                    {(Array.isArray(trendingArtists) ? trendingArtists : []).map(a => (
                       <option key={a.id} value={a.id}>{a.name}</option>
                     ))}
                   </select>
