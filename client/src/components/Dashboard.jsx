@@ -68,6 +68,14 @@ const Dashboard = () => {
     }
   }, [trendingArtists]);
 
+  // Handle logout confirmation & navigation
+  const handleConfirmLogout = () => {
+    setShowLogoutModal(false);
+    setShowUserDropdown(false);
+    logout();
+    navigate('/login');
+  };
+
   // Redirect if logged out
   useEffect(() => {
     if (!user) {
@@ -286,12 +294,10 @@ const Dashboard = () => {
           </div>
 
           <div className="sidebar-footer">
-            {user && (
-              <div className="user-logout" onClick={() => setShowLogoutModal(true)}>
-                <LogOut size={18} />
-                <span>Log Out</span>
-              </div>
-            )}
+            <div className="user-logout" onClick={() => setShowLogoutModal(true)}>
+              <LogOut size={18} />
+              <span>Log Out</span>
+            </div>
           </div>
         </aside>
       )}
@@ -1880,10 +1886,7 @@ const UserLibraryView = ({ playlists, likedSongs, songs, trendingArtists, handle
       <LogoutModal
         isOpen={showLogoutModal}
         onClose={() => setShowLogoutModal(false)}
-        onConfirm={() => {
-          setShowLogoutModal(false);
-          logout();
-        }}
+        onConfirm={handleConfirmLogout}
       />
     </div>
   );

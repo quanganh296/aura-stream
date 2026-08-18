@@ -1,11 +1,12 @@
 import React from 'react';
+import ReactDOM from 'react-dom';
 import { LogOut, X } from 'lucide-react';
 import '../styles/LogoutModal.css';
 
 const LogoutModal = ({ isOpen, onClose, onConfirm }) => {
   if (!isOpen) return null;
 
-  return (
+  return ReactDOM.createPortal(
     <div className="logout-modal-overlay">
       <div className="logout-modal-container glass-panel">
         <button className="logout-close-btn" onClick={onClose} title="Đóng">
@@ -29,7 +30,8 @@ const LogoutModal = ({ isOpen, onClose, onConfirm }) => {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
