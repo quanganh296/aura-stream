@@ -12,6 +12,7 @@ import TrackImage from './TrackImage';
 import ArtistImage from './ArtistImage';
 import PlayerBar from './PlayerBar';
 import FullPlayer from './FullPlayer';
+import LogoutModal from './LogoutModal';
 import '../styles/Dashboard.css';
 
 const Dashboard = () => {
@@ -23,6 +24,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   // Component states
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [songs, setSongs] = useState([]);
   const [trendingArtists, setTrendingArtists] = useState([]);
   const [recentlyPlayed, setRecentlyPlayed] = useState([]);
@@ -284,7 +286,7 @@ const Dashboard = () => {
 
           <div className="sidebar-footer">
             {user && (
-              <div className="user-logout" onClick={logout}>
+              <div className="user-logout" onClick={() => setShowLogoutModal(true)}>
                 <LogOut size={18} />
                 <span>Log Out</span>
               </div>
@@ -1809,6 +1811,15 @@ const UserLibraryView = ({ playlists, likedSongs, songs, trendingArtists, handle
           </div>
         </div>
       </div>
+
+      <LogoutModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={() => {
+          setShowLogoutModal(false);
+          logout();
+        }}
+      />
     </div>
   );
 };
