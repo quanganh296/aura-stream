@@ -99,9 +99,22 @@ const Dashboard = () => {
     navigate('/login', { replace: true });
   };
 
-  // Immediate redirect if logged out or unauthenticated
-  if (!loading && !user) {
-    return <Navigate to="/login" replace />;
+  // Redirect if logged out
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/login', { replace: true });
+    }
+  }, [loading, user, navigate]);
+
+  if (loading) {
+    return (
+      <div className="dashboard-container glass-panel" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', color: '#ffffff', fontFamily: 'sans-serif' }}>
+        <div style={{ textAlign: 'center' }}>
+          <h2 style={{ fontSize: '1.8rem', fontWeight: '800', background: 'linear-gradient(135deg, #a855f7, #ec4899)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>AURA STREAM</h2>
+          <p style={{ color: '#a0a0b8', marginTop: '8px', fontSize: '0.9rem' }}>Loading experience...</p>
+        </div>
+      </div>
+    );
   }
 
   // Load initial dashboard data

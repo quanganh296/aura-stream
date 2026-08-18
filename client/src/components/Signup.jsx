@@ -15,14 +15,14 @@ const Signup = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeOAuthProvider, setActiveOAuthProvider] = useState(null);
 
-  const { register, socialLogin, user } = useAuth();
+  const { register, socialLogin, user, loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (user) {
-      navigate('/home');
+    if (!loading && user) {
+      navigate('/home', { replace: true });
     }
-  }, [user, navigate]);
+  }, [user, loading, navigate]);
 
   const handleSocialAuth = async (provider, customData = {}) => {
     setIsSubmitting(true);

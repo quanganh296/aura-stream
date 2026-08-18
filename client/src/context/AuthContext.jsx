@@ -42,6 +42,9 @@ export const AuthProvider = ({ children }) => {
     setError(null);
     try {
       const data = await authAPI.login(identity, password);
+      if (data.token) {
+        localStorage.setItem('aura_token', data.token);
+      }
       setUser({
         id: data.id,
         username: data.username,
@@ -59,6 +62,9 @@ export const AuthProvider = ({ children }) => {
     setError(null);
     try {
       const data = await authAPI.register(username, email, password);
+      if (data.token) {
+        localStorage.setItem('aura_token', data.token);
+      }
       setUser({
         id: data.id,
         username: data.username,
@@ -74,11 +80,11 @@ export const AuthProvider = ({ children }) => {
   const socialLogin = async (provider, customData = {}) => {
     setError(null);
     const mockProfiles = {
-      google: { email: 'user.google@aurastream.com', name: 'Google User', avatar_url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80' },
-      facebook: { email: 'user.fb@aurastream.com', name: 'Facebook User', avatar_url: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=200&q=80' },
-      apple: { email: 'user.apple@aurastream.com', name: 'Apple User', avatar_url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80' },
-      x: { email: 'user.x@aurastream.com', name: 'X User', avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80' },
-      twitch: { email: 'user.twitch@aurastream.com', name: 'Twitch Streamer', avatar_url: 'https://images.unsplash.com/photo-1566492031773-4f4e44671857?auto=format&fit=crop&w=200&q=80' },
+      google: { email: 'qn50606@gmail.com', name: 'Quang Anh Nguyễn', avatar_url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80' },
+      facebook: { email: 'quanganh.fb@aurastream.com', name: 'Quang Anh Nguyễn', avatar_url: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=200&q=80' },
+      apple: { email: 'quanganh.apple@icloud.com', name: 'Quang Anh Nguyễn', avatar_url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80' },
+      x: { email: 'quanganh.x@aurastream.com', name: 'Quang Anh @quanganh296', avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80' },
+      twitch: { email: 'quanganh.streamer@twitch.tv', name: 'Quang Anh (Twitch)', avatar_url: 'https://images.unsplash.com/photo-1566492031773-4f4e44671857?auto=format&fit=crop&w=200&q=80' },
     };
 
     const payload = {
@@ -89,6 +95,7 @@ export const AuthProvider = ({ children }) => {
 
     try {
       const data = await authAPI.socialLogin(payload);
+      localStorage.setItem('aura_token', data.token || `social_session_${provider}_${Date.now()}`);
       setUser({
         id: data.id,
         username: data.username,

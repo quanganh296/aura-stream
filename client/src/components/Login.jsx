@@ -14,15 +14,15 @@ const Login = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeOAuthProvider, setActiveOAuthProvider] = useState(null);
 
-  const { login, socialLogin, user } = useAuth();
+  const { login, socialLogin, user, loading } = useAuth();
   const navigate = useNavigate();
 
   // Redirect if already logged in
   useEffect(() => {
-    if (user) {
-      navigate('/home');
+    if (!loading && user) {
+      navigate('/home', { replace: true });
     }
-  }, [user, navigate]);
+  }, [user, loading, navigate]);
 
   const handleSocialAuth = async (provider, customData = {}) => {
     setIsSubmitting(true);
