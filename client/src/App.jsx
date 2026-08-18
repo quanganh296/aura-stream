@@ -16,7 +16,19 @@ function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+
+            {/* Dynamic Dashboard Section Routes */}
             <Route path="/home" element={<Dashboard />} />
+            <Route path="/discover" element={<Dashboard />} />
+            <Route path="/browse" element={<Dashboard />} />
+            <Route path="/library" element={<Dashboard />} />
+            <Route path="/playlists" element={<Dashboard />} />
+            <Route path="/liked" element={<Dashboard />} />
+            <Route path="/profile" element={<Dashboard />} />
+            <Route path="/settings" element={<Dashboard />} />
+            <Route path="/artist/:id" element={<Dashboard />} />
+            <Route path="/playlist/:id" element={<Dashboard />} />
+
             {/* Fallback redirects to landing */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

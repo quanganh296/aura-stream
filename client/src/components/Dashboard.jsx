@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
+import { useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { 
   Home, Compass, Library, Heart, Search, Bell, Settings, LogOut, 
   Play, Plus, Music, Check, User, ListMusic,
@@ -22,22 +22,45 @@ const Dashboard = () => {
   } = useAudio();
 
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // Component states
-  const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [showUserDropdown, setShowUserDropdown] = useState(false);
-  const [songs, setSongs] = useState([]);
-  const [trendingArtists, setTrendingArtists] = useState([]);
-  const [recentlyPlayed, setRecentlyPlayed] = useState([]);
-  const [mixes, setMixes] = useState([]);
-  const [playlists, setPlaylists] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [likedSongs, setLikedSongs] = useState([]);
-  
-  // Navigation states
-  const [activeTab, setActiveTab] = useState('home'); // 'home', 'browse', 'library', 'liked'
+  // Helper to map browser URL pathname to activeTab name
+  const getTabFromPath = () => {
+    const path = (location.pathname || '').toLowerCase();
+    if (path.startsWith('/discover') || path.startsWith('/browse')) return 'browse';
+    if (path.startsWith('/library')) return 'library';
+    if (path.startsWith('/playlists')) return 'playlists';
+    if (path.startsWith('/liked')) return 'liked';
+    if (path.startsWith('/profile')) return 'profile';
+    if (path.startsWith('/settings')) return 'settings';
+    if (path.startsWith('/artist/')) return `artist-${path.split('/artist/')[1]}`;
+    if (path.startsWith('/playlist/')) return `playlist-${path.split('/playlist/')[1]}`;
+    return 'home';
+  };
+
+  const [activeTab, setActiveTabState] = useState(getTabFromPath);
+
+  // Keep activeTab in sync with browser URL changes
+  useEffect(() => {
+    setActiveTabState(getTabFromPath());
+  }, [location.pathname]);
+
+  // Synchronized activeTab updater that changes both React state and browser URL
+  const setActiveTab = (tab) => {
+    setActiveTabState(tab);
+    setShowFullPlayer(false);
+    
+    if (tab === 'home') navigate('/home');
+    else if (tab === 'browse') navigate('/discover');
+    else if (tab === 'library') navigate('/library');
+    else if (tab === 'playlists') navigate('/playlists');
+    else if (tab === 'liked') navigate('/liked');
+    else if (tab === 'profile') navigate('/profile');
+    else if (tab === 'settings') navigate('/settings');
+    else if (tab.startsWith('artist-')) navigate(`/artist/${tab.split('-')[1]}`);
+    else if (tab.startsWith('playlist-')) navigate(`/playlist/${tab.split('-')[1]}`);
+    else navigate('/home');
+  };
   const [librarySubTab, setLibrarySubTab] = useState('liked'); // 'liked', 'playlists', 'albums', 'artists'
   const [showFullPlayer, setShowFullPlayer] = useState(false);
   const [showNotificationsDropdown, setShowNotificationsDropdown] = useState(false);
