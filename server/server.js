@@ -74,9 +74,12 @@ app.use((err, req, res, next) => {
   }
 });
 
+const initDatabase = require('./config/initDb');
+
 // Start Server
-const server = app.listen(PORT, () => {
+const server = app.listen(PORT, async () => {
   console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+  await initDatabase();
 });
 
 // Graceful Shutdown handling for Railway / Docker SIGTERM & SIGINT
