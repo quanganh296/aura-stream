@@ -126,16 +126,16 @@ const Dashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const allSongs = await songAPI.getAll();
+      const allSongs = await songAPI.getAll().catch(() => []);
       setSongs(Array.isArray(allSongs) ? allSongs : []);
 
-      const artists = await songAPI.getTrendingArtists();
+      const artists = await songAPI.getTrendingArtists().catch(() => []);
       setTrendingArtists(Array.isArray(artists) ? artists : []);
 
-      const items = await songAPI.getMixes();
+      const items = await songAPI.getMixes().catch(() => []);
       setMixes(Array.isArray(items) ? items : []);
 
-      const userPlaylists = await playlistAPI.getAll();
+      const userPlaylists = await playlistAPI.getAll().catch(() => []);
       setPlaylists(Array.isArray(userPlaylists) ? userPlaylists : []);
 
       refreshHistory();
