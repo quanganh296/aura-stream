@@ -9,7 +9,7 @@ const songRoutes = require('./routes/songRoutes');
 const playlistRoutes = require('./routes/playlistRoutes');
 
 const app = express();
-const PORT = parseInt(process.env.PORT, 10) || 5000;
+const PORT = parseInt(process.env.PORT, 10) || 8080;
 
 // Global error safety handlers to prevent unhandled crashes
 process.on('uncaughtException', (err) => {
