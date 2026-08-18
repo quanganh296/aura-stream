@@ -541,24 +541,13 @@ const Dashboard = () => {
               </section>
             </div>
           ) : activeTab === 'browse' ? (
-            /* Browse All Songs View */
-            <div className="view-section animate-fade">
-              <h2 className="view-title">Khám Phá Bài Hát</h2>
-              <div className="songs-grid-list">
-                {songs.map(s => (
-                  <div key={s.id} className="song-grid-card glass-panel" onClick={() => handlePlayCard(s, songs)}>
-                    <div className="card-image-wrapper">
-                      <TrackImage src={s.cover_url} alt={s.title} className="card-img" />
-                      <div className="card-play-overlay">
-                        <button className="btn-card-play"><Play size={20} fill="currentColor" /></button>
-                      </div>
-                    </div>
-                    <h4>{s.title}</h4>
-                    <p>{s.artist_name}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
+            /* Redesigned Discover View matching mockup */
+            <DiscoverView 
+              songs={songs}
+              trendingArtists={trendingArtists}
+              handlePlayCard={handlePlayCard}
+              setActiveTab={setActiveTab}
+            />
           ) : activeTab === 'library' ? (
             /* Reworked Library View to match mockup schema */
             <UserLibraryView 
@@ -773,6 +762,212 @@ const Dashboard = () => {
           </div>
         </div>
       )}
+    </div>
+  );
+};
+
+// Sub-component for Redesigned Discover View
+const DiscoverView = ({ songs, trendingArtists, handlePlayCard, setActiveTab }) => {
+  const trendingList = songs.length >= 3 ? songs.slice(0, 3) : [
+    { id: 1, title: 'Neon Dreams', artist_name: 'Cyber Architect', album_name: 'Echoes of Time', duration_seconds: 222, cover_url: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?auto=format&fit=crop&w=400&q=80' },
+    { id: 2, title: 'Midnight Horizon', artist_name: 'Luna Sol', album_name: 'Dust & Gold', duration_seconds: 255, cover_url: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=400&q=80' },
+    { id: 3, title: 'Street Static', artist_name: 'The Verse King', album_name: 'Concrete Jungle', duration_seconds: 178, cover_url: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=400&q=80' },
+  ];
+
+  const formatTime = (secs) => {
+    if (!secs) return '3:30';
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  };
+
+  return (
+    <div className="view-section discover-page-view animate-fade">
+      {/* Desktop Layout */}
+      <div className="discover-desktop-layout">
+        {/* Banner Section */}
+        <div className="discover-weekly-banner">
+          <div className="banner-glow-bg"></div>
+          <div className="banner-content">
+            <span className="banner-tag">PLAYLIST OF THE WEEK</span>
+            <h1>Discover Weekly</h1>
+            <p>
+              Your personal sonic journey updated every Monday. Dive into fresh tracks tailored specifically for your rhythm.
+            </p>
+            <div className="banner-actions">
+              <button className="btn-banner-play" onClick={() => songs.length > 0 && handlePlayCard(songs[0], songs)}>
+                <Play size={18} fill="currentColor" /> Play Now
+              </button>
+              <button className="btn-banner-save">Save to Library</button>
+            </div>
+          </div>
+        </div>
+
+        {/* Moods & Genres Section */}
+        <section className="dashboard-section">
+          <div className="section-header">
+            <div>
+              <h3>Moods & Genres</h3>
+              <p className="section-subtitle" style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.2rem' }}>
+                Find the perfect vibe for your moment.
+              </p>
+            </div>
+            <span className="see-all-link">VIEW ALL</span>
+          </div>
+
+          <div className="moods-genres-layout">
+            <div className="genre-card-large clickable-card">
+              <img src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80" alt="Electronic Pulse" className="genre-bg-img" />
+              <div className="genre-card-overlay"></div>
+              <div className="genre-card-content">
+                <h4>Electronic Pulse</h4>
+              </div>
+            </div>
+
+            <div className="genre-grid-right">
+              <div className="genre-card-small clickable-card">
+                <img src="https://images.unsplash.com/photo-1518609878373-06d740f60d8b?auto=format&fit=crop&w=400&q=80" alt="Lo-Fi Beats" className="genre-bg-img" />
+                <div className="genre-card-overlay"></div>
+                <div className="genre-card-content">
+                  <h4>Lo-Fi Beats</h4>
+                </div>
+              </div>
+
+              <div className="genre-card-small clickable-card">
+                <img src="https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee?auto=format&fit=crop&w=400&q=80" alt="Pure Rock" className="genre-bg-img" />
+                <div className="genre-card-overlay"></div>
+                <div className="genre-card-content">
+                  <h4>Pure Rock</h4>
+                </div>
+              </div>
+
+              <div className="genre-card-small clickable-card">
+                <img src="https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&w=400&q=80" alt="Midnight Jazz" className="genre-bg-img" />
+                <div className="genre-card-overlay"></div>
+                <div className="genre-card-content">
+                  <h4>Midnight Jazz</h4>
+                </div>
+              </div>
+
+              <div className="genre-card-small clickable-card">
+                <img src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=400&q=80" alt="Urban Flow" className="genre-bg-img" />
+                <div className="genre-card-overlay"></div>
+                <div className="genre-card-content">
+                  <h4>Urban Flow</h4>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Bottom Grid: Trending Global & Artists for You */}
+        <div className="discover-bottom-grid">
+          {/* Trending Global */}
+          <section className="dashboard-section">
+            <div className="section-header">
+              <h3>Trending Global</h3>
+              <span className="see-all-link">SEE ALL</span>
+            </div>
+
+            <div className="trending-global-list">
+              {trendingList.map((s, idx) => (
+                <div key={s.id || idx} className="trending-global-row clickable" onClick={() => handlePlayCard(s, songs)}>
+                  <span className="trending-num">0{idx + 1}</span>
+                  <TrackImage src={s.cover_url} alt={s.title} className="trending-row-img" />
+                  <div className="trending-row-meta">
+                    <h4>{s.title}</h4>
+                    <p>{s.artist_name}</p>
+                  </div>
+                  <span className="trending-album">{s.album_name || 'Single'}</span>
+                  <span className="trending-time">{formatTime(s.duration_seconds)}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Artists for You */}
+          <section className="dashboard-section">
+            <div className="section-header">
+              <h3>Artists for You</h3>
+            </div>
+
+            <div className="artists-for-you-list">
+              {(trendingArtists.length > 0 ? trendingArtists.slice(0, 3) : [
+                { id: 101, name: 'Elara Vance', followers: '4.2M Monthly Listeners', avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80' },
+                { id: 102, name: 'Ghost Frequency', followers: '1.8M Monthly Listeners', avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80' },
+                { id: 103, name: 'The Alchemists', followers: '950K Monthly Listeners', avatar_url: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=200&q=80' },
+              ]).map((artist) => (
+                <div key={artist.id} className="artist-for-you-row clickable" onClick={() => setActiveTab(`artist-${artist.id}`)}>
+                  <ArtistImage src={artist.avatar_url} name={artist.name} className="artist-for-you-avatar" size="46px" />
+                  <div className="artist-for-you-meta">
+                    <h4>{artist.name}</h4>
+                    <p>{artist.followers || '1.2M Monthly Listeners'}</p>
+                  </div>
+                </div>
+              ))}
+
+              <button className="btn-discover-more-artists" onClick={() => setActiveTab('home')}>
+                Discover More Artists
+              </button>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      {/* Mobile Layout */}
+      <div className="discover-mobile-layout">
+        {/* Trending Now */}
+        <section className="dashboard-section">
+          <div className="section-header">
+            <h3 className="mobile-discover-title">Trending Now</h3>
+            <span className="see-all-link">See All</span>
+          </div>
+
+          <div className="mobile-trending-scroll">
+            {(songs.length > 0 ? songs.slice(0, 5) : trendingList).map((s) => (
+              <div key={s.id} className="mobile-trending-card" onClick={() => handlePlayCard(s, songs)}>
+                <div className="mobile-card-img-wrapper">
+                  <TrackImage src={s.cover_url} alt={s.title} className="mobile-card-img" />
+                </div>
+                <h4>{s.title}</h4>
+                <p>{s.artist_name}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Browse All Grid */}
+        <section className="dashboard-section" style={{ marginTop: '1.5rem' }}>
+          <h3 className="mobile-discover-title">Browse All</h3>
+          <div className="mobile-browse-grid">
+            <div className="mobile-genre-card pop-grad">Pop</div>
+            <div className="mobile-genre-card jazz-grad">Jazz</div>
+            <div className="mobile-genre-card rock-grad">Rock</div>
+            <div className="mobile-genre-card chill-grad">Chill</div>
+            <div className="mobile-genre-card focus-grad">Focus</div>
+            <div className="mobile-genre-card party-grad">Party</div>
+          </div>
+        </section>
+
+        {/* New Releases */}
+        <section className="dashboard-section" style={{ marginTop: '1.5rem' }}>
+          <h3 className="mobile-discover-title">New Releases</h3>
+          <div className="mobile-new-releases-list">
+            {(songs.length > 0 ? songs.slice(0, 4) : trendingList).map((s) => (
+              <div key={s.id} className="mobile-release-row" onClick={() => handlePlayCard(s, songs)}>
+                <TrackImage src={s.cover_url} alt={s.title} className="release-row-img" />
+                <div className="release-row-meta">
+                  <h4>{s.title}</h4>
+                  <p>{s.artist_name}</p>
+                </div>
+                <button className="btn-release-like" onClick={(e) => e.stopPropagation()}>
+                  <Heart size={18} color="#9ca3af" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
     </div>
   );
 };
