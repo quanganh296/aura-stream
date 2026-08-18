@@ -9,8 +9,7 @@ const songRoutes = require('./routes/songRoutes');
 const playlistRoutes = require('./routes/playlistRoutes');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
-const HOST = '0.0.0.0';
+const PORT = parseInt(process.env.PORT, 10) || 5000;
 
 // Global error safety handlers to prevent unhandled crashes
 process.on('uncaughtException', (err) => {
@@ -37,6 +36,7 @@ const healthCheckHandler = (req, res) => {
 
 app.get('/health', healthCheckHandler);
 app.get('/api/health', healthCheckHandler);
+app.get('/favicon.ico', (req, res) => res.status(204).end());
 
 // API Routes
 app.use('/api/auth', authRoutes);
@@ -49,7 +49,9 @@ if (fs.existsSync(clientDistPath)) {
   app.use(express.static(clientDistPath));
   app.get('*', (req, res, next) => {
     if (req.originalUrl.startsWith('/api')) return next();
-    res.sendFile(path.join(clientDistPath, 'index.html'));
+    res.sendFile(path.join(clientDistPath, 'index.html'), (err) => {
+      if (err) next(err);
+    });
   });
 } else {
   // If client dist doesn't exist, handle root route as health status
@@ -63,16 +65,18 @@ app.use((req, res, next) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('Unhandled Error:', err.message);
-  res.status(err.status || 500).json({
-    message: err.message || 'An unexpected error occurred on the server',
-    error: process.env.NODE_ENV === 'development' ? err.stack : {}
-  });
+  console.error('Unhandled Error:', err.message || err);
+  if (!res.headersSent) {
+    res.status(err.status || 500).json({
+      message: err.message || 'An unexpected error occurred on the server',
+      error: process.env.NODE_ENV === 'development' ? err.stack : {}
+    });
+  }
 });
 
 // Start Server
-const server = app.listen(PORT, HOST, () => {
-  console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on http://${HOST}:${PORT}`);
+const server = app.listen(PORT, () => {
+  console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
 });
 
 // Graceful Shutdown handling for Railway / Docker SIGTERM & SIGINT
@@ -83,7 +87,6 @@ const shutdown = (signal) => {
     process.exit(0);
   });
   
-  // Force exit after 10s timeout if connections remain open
   setTimeout(() => {
     console.error('Could not close connections in time, forcefully shutting down');
     process.exit(1);
