@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { 
   Home, Compass, Library, Heart, Search, Bell, Settings, LogOut, 
   Play, Plus, Music, Check, User, ListMusic,
@@ -16,7 +16,7 @@ import LogoutModal from './LogoutModal';
 import '../styles/Dashboard.css';
 
 const Dashboard = () => {
-  const { user, logout } = useAuth();
+  const { user, loading, logout } = useAuth();
   const { 
     currentTrack, isPlaying, playTrack, togglePlay, likedSongIds, toggleLike 
   } = useAudio();
@@ -73,15 +73,13 @@ const Dashboard = () => {
     setShowLogoutModal(false);
     setShowUserDropdown(false);
     logout();
-    navigate('/login');
+    navigate('/login', { replace: true });
   };
 
-  // Redirect if logged out
-  useEffect(() => {
-    if (!user) {
-      navigate('/login');
-    }
-  }, [user, navigate]);
+  // Immediate redirect if logged out or unauthenticated
+  if (!loading && !user) {
+    return <Navigate to="/login" replace />;
+  }
 
   // Load initial dashboard data
   useEffect(() => {
@@ -406,7 +404,7 @@ const Dashboard = () => {
                 >
                   <div className="avatar-circle-wrapper">
                     <img 
-                      src={user.avatar_url || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80"} 
+                      src={user?.avatar_url || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80"} 
                       alt="Avatar" 
                       className="user-profile-avatar-img" 
                     />
@@ -418,13 +416,13 @@ const Dashboard = () => {
                     <div className="dropdown-user-header">
                       <div className="dropdown-avatar-circle">
                         <img 
-                          src={user.avatar_url || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80"} 
+                          src={user?.avatar_url || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80"} 
                           alt="Avatar" 
                         />
                       </div>
                       <div className="dropdown-user-details">
-                        <span className="dropdown-username">{user.username || 'User'}</span>
-                        <span className="dropdown-email">{user.email || 'user@aurastream.com'}</span>
+                        <span className="dropdown-username">{user?.username || 'User'}</span>
+                        <span className="dropdown-email">{user?.email || 'user@aurastream.com'}</span>
                       </div>
                     </div>
                     
