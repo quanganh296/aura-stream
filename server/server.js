@@ -20,9 +20,20 @@ process.on('unhandledRejection', (reason, promise) => {
   console.error('CRITICAL: Unhandled Rejection at:', promise, 'reason:', reason);
 });
 
+// Disable ETag caching for dynamic API endpoints to prevent 304 Not Modified
+app.set('etag', false);
+
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Set Cache-Control headers for API routes
+app.use('/api', (req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  next();
+});
 
 // Health Check Endpoints for Railway & Docker containers
 const healthCheckHandler = (req, res) => {

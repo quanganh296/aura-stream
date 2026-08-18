@@ -43,12 +43,22 @@ const apiFetch = async (endpoint, options = {}) => {
     headers
   });
 
+  if (response.status === 401) {
+    localStorage.removeItem('aura_token');
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Not authorized, token failed');
+  }
+
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.message || `API Error: ${response.status}`);
   }
 
-  const data = await response.json();
+  if (response.status === 204) {
+    return adjustUrls([]);
+  }
+
+  const data = await response.json().catch(() => ([]));
   return adjustUrls(data);
 };
 
