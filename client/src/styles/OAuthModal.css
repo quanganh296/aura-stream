@@ -1,219 +1,148 @@
-.oauth-modal-overlay {
+.google-onetap-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(5, 5, 12, 0.8);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  z-index: 9999;
+  background-color: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 99999;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: fadeInOAuth 0.25s ease-out forwards;
+  justify-content: flex-end;
+  align-items: flex-start;
+  padding: 20px 28px;
 }
 
-@keyframes fadeInOAuth {
+.google-onetap-card {
+  width: 380px;
+  background: #25262c;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  padding: 16px 20px 20px 20px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65), 0 0 25px rgba(0, 0, 0, 0.4);
+  animation: slideDownGooglePrompt 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #e3e3e3;
+}
+
+@keyframes slideDownGooglePrompt {
   from {
     opacity: 0;
-    transform: scale(0.95);
+    transform: translateY(-16px);
   }
   to {
     opacity: 1;
-    transform: scale(1);
+    transform: translateY(0);
   }
 }
 
-.oauth-modal-container {
-  width: 92%;
-  max-width: 440px;
-  background: rgba(20, 20, 32, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 24px;
-  padding: 32px 28px;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7), 0 0 40px rgba(125, 86, 243, 0.25);
-  position: relative;
-  text-align: center;
-}
-
-.oauth-close-btn {
-  position: absolute;
-  top: 18px;
-  right: 18px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #a0a0b8;
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
+.google-onetap-header {
   display: flex;
   align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 6px;
 }
 
-.oauth-close-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
-  color: #ffffff;
-}
-
-.oauth-provider-badge {
-  width: 58px;
-  height: 58px;
-  margin: 0 auto 16px auto;
-  border-radius: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.oauth-svg {
-  width: 32px;
-  height: 32px;
-}
-
-.oauth-header h3 {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #ffffff;
-  margin: 0 0 6px 0;
-}
-
-.oauth-header p {
-  font-size: 0.88rem;
-  color: #a0a0b8;
-  margin: 0 0 20px 0;
-}
-
-.oauth-user-card {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  padding: 12px 16px;
-  margin-bottom: 20px;
-  text-align: left;
-}
-
-.oauth-avatar {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid rgba(125, 86, 243, 0.5);
-}
-
-.oauth-user-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.oauth-user-name {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #ffffff;
-}
-
-.oauth-user-email {
-  font-size: 0.8rem;
-  color: #8e8ea8;
-}
-
-.oauth-check-badge {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: #34a853;
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.oauth-scopes {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 14px;
-  padding: 14px;
-  margin-bottom: 24px;
-  text-align: left;
-}
-
-.scope-item {
+.google-header-left {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 0.84rem;
-  color: #c0c0d8;
 }
 
-.scope-icon {
-  color: #7d56f3;
+.google-g-icon {
   flex-shrink: 0;
 }
 
-.oauth-actions {
-  display: flex;
-  gap: 12px;
+.google-onetap-title {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: #e3e3e3;
+  letter-spacing: -0.01em;
 }
 
-.btn-oauth-cancel {
-  flex: 1;
-  padding: 12px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #d0d0e8;
-  font-weight: 600;
-  font-size: 0.92rem;
+.google-onetap-close {
+  background: transparent;
+  border: none;
+  color: #a0a0b0;
   cursor: pointer;
-  transition: all 0.2s ease;
+  padding: 4px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
-.btn-oauth-cancel:hover {
+.google-onetap-close:hover {
   background: rgba(255, 255, 255, 0.12);
   color: #ffffff;
 }
 
-.btn-oauth-confirm {
-  flex: 1.5;
+.google-onetap-account {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  transition: background 0.15s ease;
+  margin-bottom: 18px;
+}
+
+.google-onetap-account:hover {
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.google-onetap-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.google-onetap-user-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.google-onetap-name {
+  font-size: 0.94rem;
+  font-weight: 600;
+  color: #ffffff;
+  line-height: 1.2;
+}
+
+.google-onetap-email {
+  font-size: 0.8rem;
+  color: #9aa0a6;
+  margin-top: 2px;
+}
+
+.google-onetap-footer {
+  width: 100%;
+}
+
+.google-onetap-btn {
+  width: 100%;
   padding: 12px;
-  border-radius: 12px;
+  border-radius: 26px;
   border: none;
   color: #ffffff;
+  font-size: 0.94rem;
   font-weight: 600;
-  font-size: 0.92rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(26, 115, 232, 0.4);
+  transition: transform 0.15s ease, filter 0.15s ease;
 }
 
-.btn-oauth-confirm:hover {
-  transform: translateY(-2px);
-  filter: brightness(1.1);
-}
-
-.spinner {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.google-onetap-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.08);
 }
